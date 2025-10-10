@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Sitemap (dodaj gdy będzie gotowy)
+# Sitemap: https://yourdomain.com/sitemap.xml
+
+# Blokuj crawlowanie plików developerskich
+Disallow: /node_modules/
+Disallow: /src/
+Disallow: /.git/
+Disallow: /dist/
+Disallow: /*.json$
+Disallow: /*.md$

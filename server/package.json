@@ -1,0 +1,24 @@
+{
+  "name": "stockfish-analysis-server",
+  "version": "1.0.0",
+  "description": "Local Stockfish analysis server for chess applications",
+  "main": "stockfish-server.js",
+  "scripts": {
+    "start": "node stockfish-server.js",
+    "dev": "nodemon stockfish-server.js",
+    "install-deps": "npm install express cors"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": ["chess", "stockfish", "analysis", "engine", "server"],
+  "author": "Chess Learning App",
+  "license": "MIT"
+}
