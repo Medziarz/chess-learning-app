@@ -1,6 +1,10 @@
-# Chess Learning App 🎯
+# ♟️ Chess Learning App
 
-Aplikacja do nauki szachów z **automatycznym zapisywaniem partii!** Stworzona w React z TypeScript.
+> **Professional chess learning application with AI-powered analysis, interactive chessboard, and educational features.**
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/chess-learning-app)
+[![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](https://your-domain.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🎮 Funkcjonalności
 
