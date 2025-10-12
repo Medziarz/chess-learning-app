@@ -16,7 +16,7 @@ interface EvaluationResult {
 }
 
 class LocalStockfishService {
-  private baseUrl = 'http://localhost:3001'
+  private baseUrl = process.env.REACT_APP_STOCKFISH || 'http://localhost:3001'
   private cache = new Map<string, EvaluationResult & { timestamp: number }>()
   private readonly CACHE_DURATION = 10 * 60 * 1000 // 10 minut - longer cache for local
   
