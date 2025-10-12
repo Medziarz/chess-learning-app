@@ -22,7 +22,7 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
     setAnalysis(null);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
-  const apiUrl = process.env.REACT_APP_STOCKFISH || 'http://localhost:3001';
+  const apiUrl = process.env.VITE_STOCKFISH_URL || 'http://localhost:3001';
   fetch(`${apiUrl}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

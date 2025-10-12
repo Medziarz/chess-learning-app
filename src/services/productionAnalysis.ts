@@ -147,7 +147,7 @@ class ProductionAnalysisService {
   }
 
   private async callLocalStockfish(fen: string) {
-  const apiUrl = process.env.REACT_APP_STOCKFISH || 'http://localhost:3001';
+  const apiUrl = process.env.VITE_STOCKFISH_URL || 'http://localhost:3001';
   const response = await fetch(`${apiUrl}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
