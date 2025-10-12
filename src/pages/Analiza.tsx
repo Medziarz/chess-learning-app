@@ -93,6 +93,8 @@ export function Analiza() {
       ])
     : [];
 
+  console.log('VITE_STOCKFISH_URL:', process.env.VITE_STOCKFISH_URL);
+
   return (
     <div className="analysis-container">
       {/* Panel szachownicy */}
