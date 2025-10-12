@@ -1,371 +1,150 @@
-import { useState, useEffect, useRef } from 'react'
-import { evaluationCache } from '../utils/evaluationCache'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
-interface StockfishHook {
-  isReady: boolean
-  isThinking: boolean
-  bestMove: string | null
-  evaluation: number | null
-  getBestMove: (fen: string, depth?: number) => void
-  getEvaluation: (fen: string, depth?: number) => void
-  stopThinking: () => void
+export interface StockfishAnalysis {
+  depth: number
+  score: number | string
+  nodes: number
+  pv: string[]
+  bestMove?: string
 }
 
-export const useStockfish = (): StockfishHook => {
+export interface UseStockfishReturn {
+  analysis: StockfishAnalysis | null
+  isReady: boolean
+  isAnalyzing: boolean
+  analyzePosition: (fen: string, depth?: number, skillLevel?: number) => void
+  stopAnalysis: () => void
+}
+
+export function useStockfish(): UseStockfishReturn {
+  const [analysis, setAnalysis] = useState<StockfishAnalysis | null>(null)
   const [isReady, setIsReady] = useState(false)
-  const [isThinking, setIsThinking] = useState(false)
-  const [bestMove, setBestMove] = useState<string | null>(null)
-  const [evaluation, setEvaluation] = useState<number | null>(null)
-  const engineRef = useRef<any>(null)
-  const currentPositionRef = useRef<string>('')
-  const currentEvalRef = useRef<number | null>(null)
-  const currentMoveRef = useRef<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const workerRef = useRef<Worker | null>(null)
+  const currentFenRef = useRef<string>('')
 
+  // Initialize Web Worker - Cloud Stockfish
   useEffect(() => {
-    const initStockfish = async () => {
-      try {
-        console.log('Initializing Stockfish...')
-        let engine: any = null
-        
-        const setupEngine = (eng: any) => {
-          if (!eng) {
-            console.error('Engine is null, cannot setup')
-            return
-          }
-          
-          console.log('Setting up engine...')
-          engineRef.current = eng
-          
-          // Obsługa wiadomości od silnika
-          eng.onmessage = (event: any) => {
-            const message = event.data || event
-            console.log('Stockfish message:', message)
+    const worker = new Worker('/stockfishCloud.js')
+    workerRef.current = worker
+    console.log('☁️ Starting Cloud Stockfish Engine')
 
-            if (typeof message === 'string') {
-              if (message.includes('uciok')) {
-                console.log('UCI OK received')
-                setIsReady(true)
-              }
-              
-              if (message.includes('bestmove')) {
-                const move = message.split(' ')[1]
-                setBestMove(move)
-                setIsThinking(false)
-                currentMoveRef.current = move
-                
-                // Save to cache if we have both evaluation and best move
-                if (currentPositionRef.current && currentEvalRef.current !== null && move) {
-                  evaluationCache.set(currentPositionRef.current, {
-                    evaluation: currentEvalRef.current,
-                    bestMove: move,
-                    depth: 8,
-                    timestamp: Date.now()
-                  })
-                  console.log('Saved evaluation to cache for position')
-                }
-              }
-              
-              if (message.includes('info') && message.includes('score')) {
-                // Parsuj evaluation
-                const scoreMatch = message.match(/score (cp|mate) (-?\d+)/)
-                if (scoreMatch) {
-                  let evalValue: number
-                  if (scoreMatch[1] === 'cp') {
-                    // Centipawns to pawns
-                    evalValue = parseInt(scoreMatch[2]) / 100
-                  } else if (scoreMatch[1] === 'mate') {
-                    // Mate score
-                    const mateIn = parseInt(scoreMatch[2])
-                    evalValue = mateIn > 0 ? 99 : -99
-                  } else {
-                    return
-                  }
-                  setEvaluation(evalValue)
-                  currentEvalRef.current = evalValue
-                }
-              }
-            }
-          }
+    // Handle messages from worker
+    worker.onmessage = (e: MessageEvent) => {
+      const { type, data } = e.data
 
-          // Inicjalizacja UCI z opóźnieniem dla kompatybilności
-          const initializeUCI = () => {
-            try {
-              if (typeof eng.postMessage === 'function') {
-                eng.postMessage('uci')
-                eng.postMessage('isready')
-                console.log('UCI commands sent')
-              } else {
-                console.error('postMessage is not available on engine')
-              }
-            } catch (err) {
-              console.error('Error sending UCI commands:', err)
-            }
-          }
-          
-          // Some engines need a small delay before they're ready
-          setTimeout(initializeUCI, 100)
-        }
+      switch (type) {
+        case 'ready':
+          setIsReady(true)
+          console.log('☁️ Cloud Stockfish engine ready!')
+          break
 
-        const loadStockfishScript = (url: string): Promise<void> => {
-          return new Promise((resolve, reject) => {
-            const script = document.createElement('script')
-            script.src = url
-            script.onload = () => resolve()
-            script.onerror = () => reject(new Error(`Failed to load ${url}`))
-            document.head.appendChild(script)
+        case 'analysis':
+          console.log(`📊 Analysis depth ${data.depth}: ${data.score} (${data.source})`)
+          setAnalysis({
+            depth: data.depth,
+            score: data.score,
+            nodes: data.nodes,
+            pv: data.pv,
+            bestMove: data.bestMove || null
           })
-        }
+          break
 
-        const checkStockfish = async () => {
-          try {
-            console.log('Checking for Stockfish... window:', typeof window)
-            console.log('Stockfish object:', typeof (window as any)?.Stockfish)
-            
-            // Próba 1: Już załadowany Stockfish
-            if (typeof window !== 'undefined' && (window as any).Stockfish) {
-              console.log('Stockfish found on window, creating engine...')
-              try {
-                let stockfishEngine = (window as any).Stockfish()
-                console.log('Stockfish engine created:', stockfishEngine)
-                
-                // Handle different Stockfish versions
-                if (stockfishEngine && typeof stockfishEngine.then === 'function') {
-                  console.log('Stockfish returned a Promise, awaiting...')
-                  try {
-                    engine = await stockfishEngine
-                    console.log('Resolved Stockfish engine:', engine)
-                  } catch (promiseErr) {
-                    console.log('Promise rejected, falling back to direct usage:', promiseErr)
-                    engine = stockfishEngine
-                  }
-                } else if (stockfishEngine) {
-                  engine = stockfishEngine
-                }
-                
-                // Validate engine
-                if (engine && typeof engine.postMessage === 'function') {
-                  console.log('Engine has postMessage, setting up...')
-                  setupEngine(engine)
-                  return true
-                } else if (engine) {
-                  console.log('Engine exists but no postMessage, checking for onmessage...')
-                  // Some versions might use different interface
-                  if (typeof engine.onmessage !== 'undefined') {
-                    setupEngine(engine)
-                    return true
-                  }
-                }
-                
-                console.error('Engine validation failed - no postMessage method')
-              } catch (err) {
-                console.error('Error creating Stockfish engine:', err)
-              }
+        case 'bestmove':
+          setAnalysis(prevAnalysis => {
+            if (prevAnalysis) {
+              const updatedAnalysis = { ...prevAnalysis, bestMove: data }
+              return updatedAnalysis
             }
-            
-            // Próba 2: Alternatywny CDN
-            console.log('Trying alternative CDN sources...')
-            const cdnUrls = [
-              'https://cdnjs.cloudflare.com/ajax/libs/stockfish/10.0.2/stockfish.min.js',
-              'https://unpkg.com/stockfish@10.0.2/src/stockfish.js',
-              'https://cdn.skypack.dev/stockfish@10.0.2'
-            ]
-            
-            for (const url of cdnUrls) {
-              try {
-                console.log(`Trying to load from: ${url}`)
-                await loadStockfishScript(url)
-                
-                if ((window as any).Stockfish) {
-                  const stockfishEngine = (window as any).Stockfish()
-                  if (stockfishEngine && typeof stockfishEngine.then === 'function') {
-                    try {
-                      engine = await stockfishEngine
-                    } catch {
-                      engine = stockfishEngine
-                    }
-                  } else {
-                    engine = stockfishEngine
-                  }
-                  
-                  if (engine && (typeof engine.postMessage === 'function' || engine.onmessage !== undefined)) {
-                    setupEngine(engine)
-                    return true
-                  }
-                }
-              } catch (e) {
-                console.log(`Failed to load from ${url}:`, e)
-                continue
-              }
-            }
-            
-            console.log('No Stockfish implementation could be loaded')
-          } catch (err) {
-            console.error('Error creating Stockfish engine:', err)
-          }
-          return false
-        }
+            return null
+          })
+          setIsAnalyzing(false)
+          break
 
-        // Próba bezpośrednia
-        const initialCheck = await checkStockfish()
-        if (!initialCheck) {
-          // Czekamy z timeout
-          let attempts = 0
-          const interval = setInterval(async () => {
-            attempts++
-            console.log(`Attempting to load Stockfish... (${attempts}/50)`)
-            
-            const success = await checkStockfish()
-            if (success || attempts > 50) {
-              clearInterval(interval)
-              
-              if (!engine && attempts > 50) {
-                console.log('Stockfish not available after 50 attempts, using mock...')
-                
-                // Funkcja do generowania oceny na podstawie FEN
-                const getMockEvaluation = (fen: string) => {
-                  const fenParts = fen.split(' ')
-                  const position = fenParts[0]
-                  const activeColor = fenParts[1] // 'w' dla białych, 'b' dla czarnych
-                  
-                  const hash = position.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-                  const evaluation = ((hash % 200) - 100) // Losowa ocena od -100 do +100 centipawnów
-                  
-                  // Ruchy dla białych i czarnych oddzielnie
-                  const whiteMoves = ['e2e4', 'd2d4', 'g1f3', 'f1c4', 'b1c3', 'c2c4', 'f2f4', 'd2d3', 'e2e3', 'g2g3']
-                  const blackMoves = ['e7e5', 'd7d5', 'b8c6', 'g8f6', 'f8c5', 'c7c5', 'f7f5', 'd7d6', 'e7e6', 'g7g6']
-                  
-                  // Wybierz odpowiednie ruchy w zależności od tego kto ma ruch
-                  const availableMoves = activeColor === 'w' ? whiteMoves : blackMoves
-                  const bestMove = availableMoves[hash % availableMoves.length]
-                  
-                  return { evaluation, bestMove }
-                }
-                
-                let currentPosition = ''
-                
-                // Mock engine do testów z symulacją analizy
-                engine = {
-                  postMessage: (msg: string) => {
-                    console.log('Mock Stockfish:', msg)
-                    
-                    // Przechwyć pozycję FEN
-                    if (msg.includes('position fen ')) {
-                      currentPosition = msg.replace('position fen ', '')
-                    }
-                    
-                    // Symuluj odpowiedź na analizę
-                    if (msg.includes('go movetime') || msg.includes('go depth')) {
-                      setTimeout(() => {
-                        if (engine && engine.onmessage && currentPosition) {
-                          const { evaluation, bestMove } = getMockEvaluation(currentPosition)
-                          
-                          // Symuluj info o analizie z realną oceną
-                          engine.onmessage({ data: `info depth 8 score cp ${evaluation} nodes 5000 time 800 pv ${bestMove}` })
-                          setTimeout(() => {
-                            // Symuluj najlepszy ruch
-                            if (engine && engine.onmessage) {
-                              engine.onmessage({ data: `bestmove ${bestMove}` })
-                            }
-                          }, 700)
-                        }
-                      }, 300)
-                    }
-                  },
-                  onmessage: null,
-                  terminate: () => console.log('Mock terminated')
-                }
-                setupEngine(engine)
-                
-                // Symulacja odpowiedzi UCI dla mock
-                setTimeout(() => {
-                  if (engine && engine.onmessage) {
-                    engine.onmessage({ data: 'uciok' })
-                    setTimeout(() => {
-                      if (engine && engine.onmessage) {
-                        engine.onmessage({ data: 'readyok' })
-                      }
-                    }, 100)
-                  }
-                }, 500)
-              }
-            }
-          }, 100)
-        }
-        
-      } catch (error) {
-        console.error('Błąd inicjalizacji Stockfish:', error)
+        case 'error':
+          console.error('☁️ Cloud engine error:', data)
+          setIsAnalyzing(false)
+          break
       }
     }
 
-    initStockfish()
+    // Initialize worker
+    worker.postMessage({ type: 'init' })
 
+    // Cleanup on unmount
     return () => {
-      if (engineRef.current) {
-        try {
-          engineRef.current.terminate?.()
-        } catch (err) {
-          console.error('Error terminating engine:', err)
-        }
+      if (workerRef.current) {
+        workerRef.current.postMessage({ type: 'stop' })
+        workerRef.current.terminate()
       }
     }
   }, [])
 
-  const getBestMove = (fen: string, depth: number = 10) => {
-    if (!engineRef.current || !isReady) return
-
-    setIsThinking(true)
-    setBestMove(null)
-    
-    engineRef.current.postMessage('ucinewgame')
-    engineRef.current.postMessage(`position fen ${fen}`)
-    engineRef.current.postMessage(`go depth ${depth}`)
-  }
-
-  const getEvaluation = (fen: string, _depth: number = 8) => {
-    if (!engineRef.current || !isReady) return
-
-    // Check cache first
-    const cached = evaluationCache.get(fen)
-    if (cached) {
-      console.log('Using cached evaluation for position')
-      setEvaluation(cached.evaluation)
-      setBestMove(cached.bestMove)
+  const analyzePosition = useCallback((fen: string, depth: number = 22, skillLevel?: number) => {
+    if (!workerRef.current || !isReady) {
+      console.warn('☁️ Cloud Stockfish not ready yet')
       return
     }
 
-    setIsThinking(true)
-    setEvaluation(null)
-    setBestMove(null)
+    console.log(`☁️ Analyzing with Cloud Stockfish (depth: ${depth}, skill: ${skillLevel || 'max'}): ${fen.substring(0, 50)}...`)
     
-    // Track current position for cache saving
-    currentPositionRef.current = fen
-    currentEvalRef.current = null
-    currentMoveRef.current = null
+    // Stop any previous analysis first
+    workerRef.current.postMessage({ type: 'stop' })
     
-    try {
-      engineRef.current.postMessage(`position fen ${fen}`)
-      // Używamy czasu zamiast głębokości dla lepszej responsywności
-      engineRef.current.postMessage(`go movetime 1500`) // 1.5 sekundy
-    } catch (err) {
-      console.error('Error getting evaluation:', err)
-      setIsThinking(false)
-    }
-  }
+    // Clear previous analysis and start fresh
+    currentFenRef.current = fen
+    setAnalysis(null)
+    setIsAnalyzing(true)
 
-  const stopThinking = () => {
-    if (engineRef.current && isThinking) {
-      engineRef.current.postMessage('stop')
-      setIsThinking(false)
+    // Immediate analysis start for faster response
+    setTimeout(() => {
+      if (workerRef.current) {
+        workerRef.current.postMessage({
+          type: 'analyze',
+          data: { fen, depth, skillLevel }
+        })
+      }
+    }, 5)
+  }, [isReady])
+
+  const stopAnalysis = useCallback(() => {
+    if (workerRef.current) {
+      workerRef.current.postMessage({ type: 'stop' })
+      setIsAnalyzing(false)
     }
-  }
+  }, [])
 
   return {
+    analysis,
     isReady,
-    isThinking,
-    bestMove,
-    evaluation,
-    getBestMove,
-    getEvaluation,
-    stopThinking
+    isAnalyzing,
+    analyzePosition,
+    stopAnalysis
   }
+}
+
+// Helper function to format evaluation score for display
+export function formatEvaluation(score: number | string): { 
+  display: string, 
+  advantage: 'white' | 'black' | 'equal',
+  barPosition: number 
+} {
+  if (typeof score === 'string') {
+    // Mate score
+    const isWhiteMate = score.startsWith('M') && !score.startsWith('M-')
+    return {
+      display: score,
+      advantage: isWhiteMate ? 'white' : 'black',
+      barPosition: isWhiteMate ? 100 : 0
+    }
+  }
+
+  // Numerical evaluation
+  const advantage = score > 0.1 ? 'white' : score < -0.1 ? 'black' : 'equal'
+  const display = score > 0 ? `+${score.toFixed(2)}` : score.toFixed(2)
+  
+  // Convert score to percentage for evaluation bar (clamped between 10% and 90%)
+  const barPosition = Math.max(10, Math.min(90, 50 + (score * 10)))
+
+  return { display, advantage, barPosition }
 }

@@ -1,0 +1,229 @@
+/* Oryginalny prosty styl UserCitySetup */
+.user-city-setup {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.setup-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.setup-header h3 {
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.setup-header p {
+  color: #666;
+  margin: 0;
+  font-size: 14px;
+}
+
+.city-form {
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.city-input, .radius-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.city-input:focus, .radius-select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.suggestion {
+  margin-top: 8px;
+  padding: 8px;
+  background: #e3f2fd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.suggestion-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.save-btn, .clear-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #17a2b8, #20c997);
+  color: white;
+  flex: 1;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.save-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #138496, #1e7e34);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(23, 162, 184, 0.4);
+}
+
+.save-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.clear-btn {
+  background: linear-gradient(135deg, #fd7e14, #ffc107);
+  color: white;
+  box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+}
+
+.clear-btn:hover {
+  background: linear-gradient(135deg, #e8620e, #e0a800);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(253, 126, 20, 0.4);
+}
+
+.popular-cities {
+  margin-bottom: 24px;
+}
+
+.popular-cities h4 {
+  color: #2c3e50;
+  margin: 0 0 12px 0;
+}
+
+.cities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.city-chip {
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #6f42c1, #8e44ad);
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 3px 10px rgba(111, 66, 193, 0.3);
+}
+
+.city-chip:hover:not(:disabled) {
+  background: linear-gradient(135deg, #563d7c, #6f42c1);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(111, 66, 193, 0.4);
+}
+
+.current-links {
+  border-top: 2px solid #e9ecef;
+  padding-top: 24px;
+}
+
+.current-links h4 {
+  color: #2c3e50;
+  margin: 0 0 16px 0;
+}
+
+.links-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.link-card {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.link-card h5 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+}
+
+.link-card p {
+  margin: 0 0 12px 0;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.tournament-link {
+  display: inline-block;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  padding: 12px 20px;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+}
+
+.tournament-link:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  color: white;
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+}
+
+@media (max-width: 768px) {
+  .links-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .cities-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Stockfish Mock Engine</title>
+</head>
+<body>
+    <h1>🧪 Test Mock Stockfish Engine</h1>
+    <div id="log"></div>
+    
+    <script>
+        const log = document.getElementById('log');
+        
+        function addLog(message) {
+            const p = document.createElement('p');
+            p.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            log.appendChild(p);
+            console.log(message);
+        }
+        
+        addLog('🚀 Starting Stockfish Mock Test');
+        
+        // Create worker
+        const worker = new Worker('/stockfishWorker.js');
+        
+        worker.onmessage = function(e) {
+            const { type, data } = e.data;
+            
+            switch(type) {
+                case 'ready':
+                    addLog('✅ Worker ready!');
+                    testPositions();
+                    break;
+                case 'analysis':
+                    addLog(`📊 Analysis - Depth: ${data.depth}, Score: ${data.score}, Best: ${data.bestMove}`);
+                    break;
+                case 'bestmove':
+                    addLog(`🎯 Best move: ${data}`);
+                    break;
+            }
+        };
+        
+        function testPositions() {
+            // Test 1: Starting position
+            addLog('🔥 Testing starting position...');
+            worker.postMessage({
+                type: 'position',
+                data: {
+                    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+                    depth: 10
+                }
+            });
+            
+            // Test 2: After 1.e4
+            setTimeout(() => {
+                addLog('🔥 Testing after 1.e4...');
+                worker.postMessage({
+                    type: 'position', 
+                    data: {
+                        fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1',
+                        depth: 12
+                    }
+                });
+            }, 2000);
+            
+            // Test 3: Scholar's mate setup
+            setTimeout(() => {
+                addLog('🔥 Testing Scholar\'s mate setup...');
+                worker.postMessage({
+                    type: 'position',
+                    data: {
+                        fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4',
+                        depth: 15
+                    }
+                });
+            }, 4000);
+        }
+        
+        worker.postMessage({ type: 'init' });
+    </script>
+</body>
+</html>

@@ -16,13 +16,19 @@
     "analyze": "npm run build && npx @next/bundle-analyzer dist"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.75.0",
     "chess.js": "^1.0.0-beta.6",
+    "chessboard-element": "^1.2.0",
+    "chessboardjs": "^0.0.1",
+    "cm-chessboard": "^8.10.1",
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",
     "react-chessboard": "^4.4.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.9.4",
-    "stockfish": "^17.1.0"
+    "stockfish": "^17.1.0",
+    "stockfish.js": "^10.0.2",
+    "stockfish.wasm": "^0.10.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

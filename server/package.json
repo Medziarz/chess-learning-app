@@ -9,8 +9,8 @@
     "install-deps": "npm install express cors"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
@@ -18,7 +18,13 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "keywords": ["chess", "stockfish", "analysis", "engine", "server"],
+  "keywords": [
+    "chess",
+    "stockfish",
+    "analysis",
+    "engine",
+    "server"
+  ],
   "author": "Chess Learning App",
   "license": "MIT"
 }

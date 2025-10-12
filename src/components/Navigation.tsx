@@ -15,7 +15,8 @@ export function Navigation() {
     { path: '/profil', name: 'Profil', icon: '👤' },
     { path: '/analiza', name: 'Analiza', icon: '🔍' },
     { path: '/treningi', name: 'Treningi', icon: '💪' },
-    { path: '/aktualnosci', name: 'Aktualności', icon: '📰' }
+    { path: '/aktualnosci', name: 'Aktualności', icon: '📰' },
+    { path: '/ustawienia', name: 'Ustawienia', icon: '⚙️' }
   ]
 
   return (

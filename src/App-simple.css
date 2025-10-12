@@ -1,0 +1,405 @@
+/* Simple CSS for testing drag & drop */
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+}
+
+.app {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.app-header {
+  background: #333;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.app h1 {
+  margin: 0;
+  font-size: 2em;
+}
+
+.nav {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.nav a {
+  padding: 10px 15px;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.nav a:hover, .nav a.active {
+  background: #0056b3;
+}
+
+.main-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.analysis-panel, .training-panel, .tournament-panel, .news-panel, .settings-panel {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.analysis-panel h3, .training-panel h3, .tournament-panel h3, .news-panel h3, .settings-panel h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+.panel-content {
+  color: #666;
+}
+
+/* Additional styles for Analiza component */
+.tab-content {
+  padding: 20px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.analysis-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.board-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.move-counter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+.turn-indicator {
+  font-weight: bold;
+}
+
+.engine-status, .current-fen, .evaluation-display {
+  margin: 10px 0;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+.engine-type, .fen-label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.fen-value {
+  font-family: monospace;
+  background: #e9ecef;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+/* Move list and history styles */
+.move-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.move-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.move-button {
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.move-button:hover {
+  background: #f8f9fa;
+}
+
+.move-button.active {
+  background: #007bff;
+  color: white;
+}
+
+/* Game setup styles */
+.game-setup {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+.setup-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.color-selection, .difficulty-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.color-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.color-buttons button {
+  padding: 10px 20px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.color-buttons button.active {
+  border-color: #007bff;
+  background: #007bff;
+  color: white;
+}
+
+.engine-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.engine-buttons button {
+  padding: 8px 16px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.engine-buttons button.active {
+  border-color: #28a745;
+  background: #28a745;
+  color: white;
+}
+
+.engine-buttons button:hover:not(.active) {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.difficulty-selection select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.start-game-button {
+  padding: 15px 30px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.start-game-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.game-info {
+  background: #e9ecef;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.game-info p {
+  margin: 0;
+  font-weight: bold;
+}
+
+.game-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.surrender-button {
+  padding: 10px 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.surrender-button:hover {
+  background: #c82333;
+}
+
+.reset-button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.reset-button:hover {
+  background: #0056b3;
+}
+
+/* Minimal chess styling */
+.react-chessboard [data-piece] {
+  cursor: grab;
+}
+
+.react-chessboard [data-piece]:active {
+  cursor: grabbing;
+}
+
+/* Game layout with board and moves panel */
+.game-layout {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+  margin: 20px 0;
+}
+
+.board-container {
+  width: 500px;
+  height: 500px;
+  max-width: 500px;
+}
+
+.moves-panel {
+  width: 300px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.moves-panel h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.moves-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.move-pair {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.move-pair:nth-child(odd) {
+  background: #ffffff;
+}
+
+.move-number {
+  font-weight: bold;
+  color: #666;
+  min-width: 30px;
+}
+
+.white-move, .black-move {
+  min-width: 50px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.white-move {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.black-move {
+  background: #333;
+  color: white;
+}
+
+.no-moves {
+  color: #666;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .game-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .moves-panel {
+    width: 100%;
+    max-width: 500px;
+    max-height: 200px;
+  }
+}

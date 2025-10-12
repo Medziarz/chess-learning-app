@@ -380,6 +380,23 @@ ${pgnMoves.trim()} *`
                   position={game.fen()}
                   onPieceDrop={makeMove}
                   boardWidth={400}
+                  animationDuration={200}
+                  areArrowsAllowed={false}
+                  arePiecesDraggable={true}
+                  onPieceDragBegin={() => {
+                    document.body.classList.add('dragging-piece')
+                    document.body.style.cursor = 'grabbing'
+                  }}
+                  onPieceDragEnd={() => {
+                    document.body.classList.remove('dragging-piece')
+                    document.body.style.cursor = 'default'
+                  }}
+                  customBoardStyle={{
+                    borderRadius: '4px',
+                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
+                  }}
+                  customDarkSquareStyle={{ backgroundColor: '#779952' }}
+                  customLightSquareStyle={{ backgroundColor: '#edeed1' }}
                 />
               </div>
               
@@ -453,7 +470,23 @@ ${pgnMoves.trim()} *`
                       position={analysisGame.fen()}
                       onPieceDrop={makeAnalysisMove}
                       boardWidth={400}
-                      animationDuration={0}
+                      animationDuration={200}
+                      areArrowsAllowed={false}
+                      arePiecesDraggable={true}
+                      onPieceDragBegin={() => {
+                        document.body.classList.add('dragging-piece')
+                        document.body.style.cursor = 'grabbing'
+                      }}
+                      onPieceDragEnd={() => {
+                        document.body.classList.remove('dragging-piece')
+                        document.body.style.cursor = 'default'
+                      }}
+                      customBoardStyle={{
+                        borderRadius: '4px',
+                        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
+                      }}
+                      customDarkSquareStyle={{ backgroundColor: '#779952' }}
+                      customLightSquareStyle={{ backgroundColor: '#edeed1' }}
                     />
                   </div>
                   

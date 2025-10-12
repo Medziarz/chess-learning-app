@@ -214,65 +214,73 @@ To będzie prawdopodobnie najsilniejszy turniej Candidates w historii!`,
       <h2>📰 Aktualności szachowe</h2>
       
       <div className="news-container">
-        {/* Filtry kategorii */}
-        <div className="news-filters">
-          <div className="category-filters">
-            <button 
-              className={selectedCategory === 'all' ? 'active' : ''}
-              onClick={() => setSelectedCategory('all')}
-            >
-              📄 Wszystkie ({news.length})
-            </button>
-            {(['tournament', 'update', 'tip', 'news'] as const).map(category => {
-              const count = news.filter(item => item.category === category).length
-              return (
-                <button 
-                  key={category}
-                  className={selectedCategory === category ? 'active' : ''}
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {getCategoryIcon(category)} {getCategoryName(category)} ({count})
-                </button>
-              )
-            })}
+        {/* Panel filtrów */}
+        <div className="news-panel">
+          <h3>🔍 Kategorie</h3>
+          <div className="panel-content">
+            <div className="category-filters">
+              <button 
+                className={selectedCategory === 'all' ? 'active' : ''}
+                onClick={() => setSelectedCategory('all')}
+              >
+                📄 Wszystkie ({news.length})
+              </button>
+              {(['tournament', 'update', 'tip', 'news'] as const).map(category => {
+                const count = news.filter(item => item.category === category).length
+                return (
+                  <button 
+                    key={category}
+                    className={selectedCategory === category ? 'active' : ''}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {getCategoryIcon(category)} {getCategoryName(category)} ({count})
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Lista artykułów */}
-        <div className="news-list">
-          {filteredNews.length === 0 ? (
-            <p className="no-news">Brak aktualności w wybranej kategorii</p>
-          ) : (
-            filteredNews.map(article => (
-              <div 
-                key={article.id}
-                className="news-item"
-                onClick={() => openArticle(article)}
-              >
-                <div className="news-header">
-                  <div className="news-category">
-                    {getCategoryIcon(article.category)} {getCategoryName(article.category)}
+        {/* Panel artykułów */}
+        <div className="news-panel">
+          <h3>📄 Najnowsze artykuły</h3>
+          <div className="panel-content">
+            <div className="news-list">
+              {filteredNews.length === 0 ? (
+                <p className="no-news">Brak aktualności w wybranej kategorii</p>
+              ) : (
+                filteredNews.map(article => (
+                  <div 
+                    key={article.id}
+                    className="news-item"
+                    onClick={() => openArticle(article)}
+                  >
+                    <div className="news-header">
+                      <div className="news-category">
+                        {getCategoryIcon(article.category)} {getCategoryName(article.category)}
+                      </div>
+                      <div className="news-date">{article.date}</div>
+                    </div>
+                    
+                    <h3 className="news-title">{article.title}</h3>
+                    <p className="news-summary">{article.summary}</p>
+                    
+                    <div className="news-footer">
+                      <span className="news-author">👤 {article.author}</span>
+                      <span className="read-time">⏱️ {article.readTime} min</span>
+                      <span className="read-more">Czytaj więcej →</span>
+                    </div>
                   </div>
-                  <div className="news-date">{article.date}</div>
-                </div>
-                
-                <h3 className="news-title">{article.title}</h3>
-                <p className="news-summary">{article.summary}</p>
-                
-                <div className="news-footer">
-                  <span className="news-author">👤 {article.author}</span>
-                  <span className="read-time">⏱️ {article.readTime} min</span>
-                  <span className="read-more">Czytaj więcej →</span>
-                </div>
-              </div>
-            ))
-          )}
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Sidebar z dodatkowymi informacjami */}
-        <div className="news-sidebar">
-          <div className="sidebar-section">
-            <h3>🔥 Popularne</h3>
+        {/* Panel popularne i wydarzenia */}
+        <div className="news-panel">
+          <h3>🔥 Popularne tematy</h3>
+          <div className="panel-content">
             <div className="popular-topics">
               <div className="topic-item">📊 Analiza pozycji</div>
               <div className="topic-item">🏆 Turnieje online</div>
@@ -280,9 +288,12 @@ To będzie prawdopodobnie najsilniejszy turniej Candidates w historii!`,
               <div className="topic-item">📚 Otwarcia</div>
             </div>
           </div>
-          
-          <div className="sidebar-section">
-            <h3>📅 Nadchodzące wydarzenia</h3>
+        </div>
+
+        {/* Panel wydarzeń */}
+        <div className="news-panel">
+          <h3>📅 Nadchodzące wydarzenia</h3>
+          <div className="panel-content">
             <div className="upcoming-events">
               <div className="event-item">
                 <strong>15.10.2024</strong> - Turniej Błyskawiczny
@@ -295,9 +306,12 @@ To będzie prawdopodobnie najsilniejszy turniej Candidates w historii!`,
               </div>
             </div>
           </div>
-          
-          <div className="sidebar-section">
-            <h3>💡 Wskazówka dnia</h3>
+        </div>
+
+        {/* Panel wskazówki */}
+        <div className="news-panel">
+          <h3>💡 Wskazówka dnia</h3>
+          <div className="panel-content">
             <div className="tip-of-day">
               <p>W końcówkach król staje się aktywną figurą. Centralizuj go i używaj do ataku na pionki przeciwnika!</p>
             </div>

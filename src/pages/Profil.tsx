@@ -156,126 +156,142 @@ export function Profil() {
       <h2>👤 Profil gracza</h2>
       
       <div className="profile-container">
-        <div className="profile-header">
-          <div className="player-info">
-            {isEditing ? (
-              <div className="edit-name">
-                <input 
-                  type="text" 
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && savePlayerName()}
-                />
-                <button onClick={savePlayerName}>✅</button>
-                <button onClick={() => setIsEditing(false)}>❌</button>
-              </div>
-            ) : (
-              <div className="player-name">
-                <h3>{playerName}</h3>
-                <button onClick={() => setIsEditing(true)}>✏️</button>
-              </div>
-            )}
-            
-            <div className="current-rating">
-              <span className="rating-label">Rating:</span>
-              <span className="rating-value">{stats.rating}</span>
-              <span className="rating-trend">{getRatingTrendIcon()}</span>
-            </div>
-          </div>
-          
-          <div className="profile-actions">
-            <button onClick={exportStats} className="export-btn">
-              📊 Eksportuj statystyki
-            </button>
-          </div>
-        </div>
-
-        <div className="profile-stats">
-          <h3>Statystyki</h3>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h4>Partie</h4>
-              <div className="stat-main">{stats.gamesPlayed}</div>
-              <div className="stat-breakdown">
-                <span className="wins">Wygrane: {stats.wins}</span>
-                <span className="draws">Remisy: {stats.draws}</span>
-                <span className="losses">Przegrane: {stats.losses}</span>
+        {/* Panel informacji o graczu */}
+        <div className="profile-panel">
+          <h3>🎮 Informacje o graczu</h3>
+          <div className="panel-content">
+            <div className="player-info">
+              {isEditing ? (
+                <div className="edit-name">
+                  <input 
+                    type="text" 
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && savePlayerName()}
+                  />
+                  <button onClick={savePlayerName}>✅</button>
+                  <button onClick={() => setIsEditing(false)}>❌</button>
+                </div>
+              ) : (
+                <div className="player-name">
+                  <h3>{playerName}</h3>
+                  <button onClick={() => setIsEditing(true)}>✏️</button>
+                </div>
+              )}
+              
+              <div className="current-rating">
+                <span className="rating-label">Rating:</span>
+                <span className="rating-value">{stats.rating}</span>
+                <span className="rating-trend">{getRatingTrendIcon()}</span>
               </div>
             </div>
             
-            <div className="stat-card">
-              <h4>Procent wygranych</h4>
-              <div className="stat-main">{getWinRate()}%</div>
-              <div className="win-rate-bar">
-                <div 
-                  className="win-rate-fill" 
-                  style={{ width: `${getWinRate()}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            <div className="stat-card">
-              <h4>Taktyka</h4>
-              <div className="stat-main">{stats.tacticalRating}</div>
-              <div className="stat-breakdown">
-                <span>Zadań: {stats.puzzlesSolved}</span>
-              </div>
-            </div>
-            
-            <div className="stat-card">
-              <h4>Serie</h4>
-              <div className="stat-main">{stats.currentStreak}</div>
-              <div className="stat-breakdown">
-                <span>Rekord: {stats.longestWinStreak}</span>
-              </div>
+            <div className="profile-actions">
+              <button onClick={exportStats} className="export-btn">
+                📊 Eksportuj statystyki
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="rating-history">
-          <h3>Historia ratingu</h3>
-          <div className="rating-chart">
-            {stats.ratingHistory.map((point, index) => (
-              <div key={index} className="rating-point">
-                <div className="rating-date">{point.date}</div>
-                <div className="rating-value">{point.rating}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="playing-style">
-          <h3>Styl gry</h3>
-          <div className="style-stats">
-            <div className="style-item">
-              <span className="style-label">Ulubione otwarcie:</span>
-              <span className="style-value">{stats.favoriteOpening}</span>
-            </div>
-            <div className="style-item">
-              <span className="style-label">Średni czas partii:</span>
-              <span className="style-value">{stats.averageGameTime} min</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="achievements-section">
-          <h3>Osiągnięcia ({achievements.filter(a => a.unlocked).length}/{achievements.length})</h3>
-          <div className="achievements-grid">
-            {achievements.map(achievement => (
-              <div 
-                key={achievement.id}
-                className={`achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}`}
-              >
-                <div className="achievement-icon">{achievement.icon}</div>
-                <div className="achievement-info">
-                  <h4>{achievement.title}</h4>
-                  <p>{achievement.description}</p>
-                  {achievement.unlocked && achievement.unlockedDate && (
-                    <small>Odblokowane: {achievement.unlockedDate}</small>
-                  )}
+        {/* Panel statystyk */}
+        <div className="profile-panel">
+          <h3>📊 Statystyki</h3>
+          <div className="panel-content">
+            <div className="stats-grid">
+              <div className="stat-card">
+                <h4>Partie</h4>
+                <div className="stat-main">{stats.gamesPlayed}</div>
+                <div className="stat-breakdown">
+                  <span className="wins">Wygrane: {stats.wins}</span>
+                  <span className="draws">Remisy: {stats.draws}</span>
+                  <span className="losses">Przegrane: {stats.losses}</span>
                 </div>
               </div>
-            ))}
+              
+              <div className="stat-card">
+                <h4>Procent wygranych</h4>
+                <div className="stat-main">{getWinRate()}%</div>
+                <div className="win-rate-bar">
+                  <div 
+                    className="win-rate-fill" 
+                    style={{ width: `${getWinRate()}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <h4>Taktyka</h4>
+                <div className="stat-main">{stats.tacticalRating}</div>
+                <div className="stat-breakdown">
+                  <span>Zadań: {stats.puzzlesSolved}</span>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <h4>Serie</h4>
+                <div className="stat-main">{stats.currentStreak}</div>
+                <div className="stat-breakdown">
+                  <span>Rekord: {stats.longestWinStreak}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel historii ratingu */}
+        <div className="profile-panel">
+          <h3>📈 Historia ratingu</h3>
+          <div className="panel-content">
+            <div className="rating-chart">
+              {stats.ratingHistory.map((point, index) => (
+                <div key={index} className="rating-point">
+                  <div className="rating-date">{point.date}</div>
+                  <div className="rating-value">{point.rating}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Panel stylu gry */}
+        <div className="profile-panel">
+          <h3>♟️ Styl gry</h3>
+          <div className="panel-content">
+            <div className="style-stats">
+              <div className="style-item">
+                <span className="style-label">Ulubione otwarcie:</span>
+                <span className="style-value">{stats.favoriteOpening}</span>
+              </div>
+              <div className="style-item">
+                <span className="style-label">Średni czas partii:</span>
+                <span className="style-value">{stats.averageGameTime} min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel osiągnięć */}
+        <div className="profile-panel">
+          <h3>🏆 Osiągnięcia ({achievements.filter(a => a.unlocked).length}/{achievements.length})</h3>
+          <div className="panel-content">
+            <div className="achievements-grid">
+              {achievements.map(achievement => (
+                <div 
+                  key={achievement.id}
+                  className={`achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}`}
+                >
+                  <div className="achievement-icon">{achievement.icon}</div>
+                  <div className="achievement-info">
+                    <h4>{achievement.title}</h4>
+                    <p>{achievement.description}</p>
+                    {achievement.unlocked && achievement.unlockedDate && (
+                      <small>Odblokowane: {achievement.unlockedDate}</small>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

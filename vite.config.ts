@@ -5,10 +5,28 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    // Temporarily disable COEP headers as they're blocking Stockfish loading
-    // headers: {
-    //   'Cross-Origin-Opener-Policy': 'same-origin',
-    //   'Cross-Origin-Embedder-Policy': 'require-corp'
-    // }
-  }
+    // Headers required for SharedArrayBuffer and WASM
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Resource-Policy': 'cross-origin'
+    },
+    // Enable specific features for WASM
+    fs: {
+      allow: ['..']
+    }
+  },
+  optimizeDeps: {
+    exclude: ['stockfish.wasm', 'stockfish', 'stockfish.js']
+  },
+  // Ensure WASM files are served correctly
+  assetsInclude: ['**/*.wasm'],
+  build: {
+    target: 'es2020',
+    rollupOptions: {
+      external: ['stockfish.js']
+    }
+  },
+  // Allow access to node_modules from public
+  publicDir: 'public'
 })

@@ -8,45 +8,45 @@ interface StockfishAnalysisProps {
 export const StockfishAnalysis: React.FC<StockfishAnalysisProps> = ({ currentFen }) => {
   const { 
     isReady, 
-    isThinking, 
-    bestMove, 
-    evaluation, 
-    getBestMove, 
-    getEvaluation,
-    stopThinking 
+    isAnalyzing, 
+    analysis,
+    analyzePosition, 
+    stopAnalysis
   } = useStockfish()
 
   // Automatyczna ocena przy zmianie pozycji
   useEffect(() => {
     console.log('StockfishAnalysis: isReady=', isReady, 'currentFen=', currentFen)
     if (isReady && currentFen) {
-      console.log('StockfishAnalysis: Wywołuję getEvaluation dla FEN:', currentFen)
+      console.log('StockfishAnalysis: Wywołuję analyzePosition dla FEN:', currentFen)
       // Małe opóźnienie żeby nie spamować silnika
       const timer = setTimeout(() => {
-        getEvaluation(currentFen, 6)  // Zmniejszona głębokość dla szybszej analizy
+        analyzePosition(currentFen, 10)  // Głębokość 10 dla szybkiej analizy
       }, 150)
       
       return () => clearTimeout(timer)
     }
-  }, [currentFen, isReady, getEvaluation])
+  }, [currentFen, isReady, analyzePosition])
 
   const handleAnalyze = () => {
-    getBestMove(currentFen, 12)
+    analyzePosition(currentFen, 15) // Głębsza analiza na żądanie
   }
 
   const getEvaluationText = () => {
-    if (evaluation === null) return 'Brak oceny'
-    if (evaluation > 5) return `Białe wygrywają (+${evaluation.toFixed(1)})`
-    if (evaluation < -5) return `Czarne wygrywają (${evaluation.toFixed(1)})`
-    if (evaluation > 0) return `Białe lepiej (+${evaluation.toFixed(1)})`
-    if (evaluation < 0) return `Czarne lepiej (${evaluation.toFixed(1)})`
+    if (!analysis?.score) return 'Brak oceny'
+    const score = typeof analysis.score === 'number' ? analysis.score : 0
+    if (score > 5) return `Białe wygrywają (+${score.toFixed(1)})`
+    if (score < -5) return `Czarne wygrywają (${score.toFixed(1)})`
+    if (score > 0) return `Białe lepiej (+${score.toFixed(1)})`
+    if (score < 0) return `Czarne lepiej (${score.toFixed(1)})`
     return 'Pozycja równa (0.0)'
   }
 
   const getEvaluationColor = () => {
-    if (evaluation === null) return '#666'
-    if (evaluation > 1) return '#4caf50'
-    if (evaluation < -1) return '#f44336'
+    if (!analysis?.score) return '#666'
+    const score = typeof analysis.score === 'number' ? analysis.score : 0
+    if (score > 1) return '#4caf50'
+    if (score < -1) return '#f44336'
     return '#ff9800'
   }
 
@@ -58,14 +58,16 @@ export const StockfishAnalysis: React.FC<StockfishAnalysisProps> = ({ currentFen
           <span className={`status-indicator ${isReady ? 'ready' : 'loading'}`}>
             {isReady ? '✅ Gotowy' : '⏳ Ładuje...'}
           </span>
-          {isThinking && <span className="thinking-indicator">🧠 Analizuje...</span>}
+          {isAnalyzing && <span className="thinking-indicator">🧠 Analizuje...</span>}
         </div>
         <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
           Debug: FEN = {currentFen.substring(0, 20)}...
           <br />
-          Evaluation: {evaluation !== null ? evaluation : 'null'}
+          Evaluation: {analysis?.score !== undefined ? analysis.score : 'null'}
           <br />
-          BestMove: {bestMove || 'none'}
+          BestMove: {analysis?.bestMove || 'none'}
+          <br />
+          Depth: {analysis?.depth || 0}
         </div>
       </div>
 
@@ -82,7 +84,7 @@ export const StockfishAnalysis: React.FC<StockfishAnalysisProps> = ({ currentFen
             <div 
               className="evaluation-fill"
               style={{ 
-                width: `${Math.min(Math.max(50 + (evaluation || 0) * 10, 0), 100)}%`,
+                width: `${Math.min(Math.max(50 + ((typeof analysis?.score === 'number' ? analysis.score : 0)) * 10, 0), 100)}%`,
                 backgroundColor: getEvaluationColor()
               }}
             />
@@ -93,8 +95,8 @@ export const StockfishAnalysis: React.FC<StockfishAnalysisProps> = ({ currentFen
       <div className="best-move-display">
         <h4>🎯 Sugerowany ruch</h4>
         <div className="move-suggestion">
-          {bestMove ? (
-            <span className="best-move">{bestMove}</span>
+          {analysis?.bestMove ? (
+            <span className="best-move">{analysis.bestMove}</span>
           ) : (
             <span className="no-move">Analizuję...</span>
           )}
@@ -102,7 +104,7 @@ export const StockfishAnalysis: React.FC<StockfishAnalysisProps> = ({ currentFen
         <button 
           className="analyze-deeper"
           onClick={handleAnalyze}
-          disabled={!isReady || isThinking}
+          disabled={!isReady || isAnalyzing}
         >
           🔍 Głębsza analiza
         </button>
@@ -116,23 +118,23 @@ export const StockfishAnalysis: React.FC<StockfishAnalysisProps> = ({ currentFen
       <div className="manual-controls">
         <button 
           className="analyze-button" 
-          onClick={() => getEvaluation(currentFen, 8)}
-          disabled={!isReady || isThinking}
+          onClick={() => analyzePosition(currentFen, 12)}
+          disabled={!isReady || isAnalyzing}
         >
           🔍 Analizuj pozycję
         </button>
         <button 
           className="best-move-button" 
           onClick={handleAnalyze}
-          disabled={!isReady || isThinking}
+          disabled={!isReady || isAnalyzing}
         >
           🎯 Znajdź najlepszy ruch
         </button>
       </div>
 
-      {isThinking && (
+      {isAnalyzing && (
         <div className="thinking-controls">
-          <button className="stop-button" onClick={stopThinking}>
+          <button className="stop-button" onClick={stopAnalysis}>
             ⏹️ Zatrzymaj
           </button>
         </div>
