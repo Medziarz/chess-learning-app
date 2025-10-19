@@ -9,8 +9,8 @@ const PORT = 3001
 
 // Enable CORS for your frontend
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'],
-  credentials: true
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'https://medarddahms.pl'],
+  credentials: false
 }))
 
 app.use(express.json())
@@ -26,16 +26,8 @@ class StockfishEngine {
 
   initEngine() {
     try {
-      // Try different Stockfish paths
-      const possiblePaths = [
-        'stockfish',
-        'C:\\stockfish\\stockfish.exe',
-        path.join(__dirname, 'stockfish.exe'),
-        '/usr/local/bin/stockfish',
-        '/usr/bin/stockfish'
-      ]
-
-      let enginePath = 'stockfish'
+      // Use system stockfish
+      const enginePath = 'stockfish'
       
       console.log('🚀 Starting Stockfish engine...')
       this.engine = spawn(enginePath, [], {
