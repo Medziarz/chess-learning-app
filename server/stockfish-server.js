@@ -4,6 +4,7 @@ const cors = require('cors')
 const { spawn } = require('child_process')
 const path = require('path')
 const fs = require('fs')
+const PositionCache = require('./positionCache')
 
 const app = express()
 const PORT = 3001
@@ -31,6 +32,7 @@ class StockfishEngine {
     this.isReady = false
     this.pendingRequests = new Map()
     this.requestId = 0
+    this.cache = new PositionCache()
     this.initEngine()
   }
 
@@ -146,18 +148,43 @@ class StockfishEngine {
     })
   }
 
+  getCurrentTurn(fen) {
+    // FEN format: pozycja kolorruch roszady bicie_w_przelocie licznik50 numer_ruchu
+    const parts = fen.split(' ');
+    return parts[1]; // 'w' dla białych, 'b' dla czarnych
+  }
+
   async analyzePosition(fen, depth = 20, timeLimit = 2000) {
+    // Sprawdź cache
+    if (this.cache.has(fen, depth)) {
+      console.log('🎯 Cache hit:', fen);
+      return this.cache.get(fen, depth);
+    }
+
     return new Promise((resolve, reject) => {
       if (!this.isReady) {
         return reject(new Error('Engine not ready'))
       }
 
-      const requestId = ++this.requestId
-      this.pendingRequests.set(requestId, resolve)
+      const currentTurn = this.getCurrentTurn(fen);
+      const requestId = ++this.requestId;
+
+      // Zmodyfikuj resolver aby zawsze zwracał ruch dla aktualnego koloru
+      this.pendingRequests.set(requestId, (analysis) => {
+        // Jeśli to ruch czarnych, odwróć ocenę
+        if (currentTurn === 'b') {
+          analysis.evaluation = -analysis.evaluation;
+        }
+        
+        // Zapisz w cache
+        this.cache.set(fen, depth, analysis);
+        
+        resolve(analysis);
+      });
 
       // Set position and analyze
-      this.sendCommand(`position fen ${fen}`)
-      this.sendCommand(`go depth ${depth} movetime ${timeLimit}`)
+      this.sendCommand(`position fen ${fen}`);
+      this.sendCommand(`go depth ${depth} movetime ${timeLimit}`);
       
       // Timeout fallback
       setTimeout(() => {
@@ -165,7 +192,7 @@ class StockfishEngine {
           this.pendingRequests.delete(requestId)
           resolve({
             evaluation: 0.0,
-            bestMove: 'e2e4',
+            bestMove: null,
             depth: depth,
             error: 'timeout'
           })

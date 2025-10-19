@@ -163,9 +163,9 @@ export function Analiza() {
                 <div className="eval-score">
                   <span className="eval-value">{
                     typeof displayAnalysis.score === 'number'
-                      ? parseFloat((game.turn() === 'b' ? -displayAnalysis.score : displayAnalysis.score).toFixed(1)).toString()
+                      ? parseFloat(displayAnalysis.score.toFixed(1)).toString()
                       : (typeof displayAnalysis.score === 'string' && !isNaN(Number(displayAnalysis.score))
-                          ? parseFloat((game.turn() === 'b' ? -Number(displayAnalysis.score) : Number(displayAnalysis.score)).toFixed(1)).toString()
+                          ? parseFloat(Number(displayAnalysis.score).toFixed(1)).toString()
                           : displayAnalysis.score ?? '—')
                   }</span>
                   <span className="eval-label">Ewaluacja (z perspektywy białych)</span>
