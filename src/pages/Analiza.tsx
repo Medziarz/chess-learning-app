@@ -55,11 +55,16 @@ export function Analiza() {
           turn: game.turn()
         });
 
+        // Upewniamy się, że bestMove nie będzie undefined
         const updatedAnalysis = {
           score: hasScore ? newScore : (displayAnalysis?.score ?? null),
-          bestMove: hasMove ? analysis.bestMove : (displayAnalysis?.bestMove ?? null)
+          bestMove: hasMove ? (analysis.bestMove || null) : (displayAnalysis?.bestMove ?? null)
         };
-        setDisplayAnalysis(updatedAnalysis);
+        
+        // TypeScript musi wiedzieć, że bestMove będzie string | null
+        if (updatedAnalysis.bestMove !== undefined) {
+          setDisplayAnalysis(updatedAnalysis);
+        }
       }
     }
   }, [analysis, depth, game]);
