@@ -33,9 +33,12 @@ export function Analiza() {
   // Aktualizuj wyświetlaną analizę od głębi 20, a potem tylko jeśli wynik się zmieni
   useEffect(() => {
     if (analysis && depth >= 20) {
+      console.log('Analysis update:', analysis);
       // Only update if new analysis is different
-      if (!displayAnalysis || displayAnalysis.score !== analysis.score || displayAnalysis.bestMove !== analysis.bestMove) {
-        setDisplayAnalysis({ score: analysis.score, bestMove: analysis.bestMove ?? null });
+      const newScore = typeof analysis.score === 'number' ? analysis.score : analysis.score;
+      if (!displayAnalysis || displayAnalysis.score !== newScore || displayAnalysis.bestMove !== analysis.bestMove) {
+        console.log('Updating display analysis with:', { score: newScore, bestMove: analysis.bestMove });
+        setDisplayAnalysis({ score: newScore, bestMove: analysis.bestMove ?? null });
       }
       // Do NOT clear displayAnalysis between depths
     }

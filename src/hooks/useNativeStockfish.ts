@@ -54,12 +54,15 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
         const result = await response.json();
         if (!isMounted) return;
         console.log('Server response:', result);
-        setAnalysis({
-          depth,
-          score: result.eval,
-          bestMove: result.output?.match(/bestmove ([a-h][1-8][a-h][1-8][qrbn]?)/)?.[1],
-          output: result.output
-        });
+        const analysisResult = {
+          depth: result.depth || depth,
+          score: result.evaluation,
+          bestMove: result.bestMove,
+          output: JSON.stringify(result)
+        };
+        
+        console.log('Setting analysis state:', analysisResult);
+        setAnalysis(analysisResult);
       })
       .catch(err => {
         if (!isMounted) return;
