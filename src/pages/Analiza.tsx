@@ -133,12 +133,12 @@ export function Analiza() {
                 <div className="eval-score">
                   <span className="eval-value">{
                     typeof displayAnalysis.score === 'number'
-                      ? parseFloat(displayAnalysis.score.toFixed(1)).toString()
+                      ? parseFloat((game.turn() === 'b' ? -displayAnalysis.score : displayAnalysis.score).toFixed(1)).toString()
                       : (typeof displayAnalysis.score === 'string' && !isNaN(Number(displayAnalysis.score))
-                          ? parseFloat(Number(displayAnalysis.score).toFixed(1)).toString()
+                          ? parseFloat((game.turn() === 'b' ? -Number(displayAnalysis.score) : Number(displayAnalysis.score)).toFixed(1)).toString()
                           : displayAnalysis.score ?? '—')
                   }</span>
-                  <span className="eval-label">Ewaluacja silnika</span>
+                  <span className="eval-label">Ewaluacja (z perspektywy białych)</span>
                 </div>
                 <div className="best-move">
                   <span className="best-move-label">Najlepszy ruch:</span>
