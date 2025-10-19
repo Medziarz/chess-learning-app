@@ -41,24 +41,53 @@ export function Analiza() {
       const hasScore = analysis.score !== undefined && analysis.score !== null &&
         (typeof analysis.score === 'number' || !isNaN(Number(analysis.score)));
 
+      // Sprawdź czy ruch jest legalny w aktualnej pozycji
+      let isMoveValid = false;
+      if (hasMove && analysis.bestMove) {
+        try {
+          // Tworzymy tymczasową grę do sprawdzenia ruchu
+          const tempGame = new Chess(game.fen());
+          const move = analysis.bestMove;
+          const from = move.slice(0, 2);
+          const to = move.slice(2, 4);
+          
+          // Próbujemy wykonać ruch
+          const moveResult = tempGame.move({ from, to, promotion: 'q' });
+          isMoveValid = moveResult !== null;
+
+          console.log('Move validation:', {
+            move,
+            from,
+            to,
+            isValid: isMoveValid,
+            depth,
+            currentTurn: game.turn()
+          });
+        } catch (e) {
+          console.log('Invalid move check:', e);
+          isMoveValid = false;
+        }
+      }
+
       // Konwertuj score na liczbę jeśli mamy ewaluację
       const newScore = hasScore 
         ? (typeof analysis.score === 'number' ? analysis.score : Number(analysis.score))
         : null;
 
-      // Aktualizuj display jeśli mamy nowy ruch lub nową ewaluację
-      if (hasMove || hasScore) {
+      // Aktualizuj display jeśli mamy poprawny ruch lub nową ewaluację
+      if ((hasMove && isMoveValid) || hasScore) {
         console.log('Updating analysis:', { 
           score: newScore,
           bestMove: analysis.bestMove,
           depth,
-          turn: game.turn()
+          turn: game.turn(),
+          isMoveValid
         });
 
         // Upewniamy się, że bestMove nie będzie undefined
         const updatedAnalysis = {
           score: hasScore ? newScore : (displayAnalysis?.score ?? null),
-          bestMove: hasMove ? (analysis.bestMove || null) : (displayAnalysis?.bestMove ?? null)
+          bestMove: (hasMove && isMoveValid) ? (analysis.bestMove || null) : (displayAnalysis?.bestMove ?? null)
         };
         
         // TypeScript musi wiedzieć, że bestMove będzie string | null
