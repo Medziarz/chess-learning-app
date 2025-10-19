@@ -37,39 +37,45 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
       body: JSON.stringify({ fen, depth }),
       signal: controller.signal
     })
+    .then(async response => {
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Server error: ${response.status} - ${errorText || response.statusText}`);
+      }
+      return response;
+    })
       .then(async response => {
         clearTimeout(timeout);
         const result = await response.json();
         if (!isMounted) return;
-        if (response.ok) {
-          setAnalysis({
-            depth,
-            score: result.eval,
-            bestMove: result.output?.match(/bestmove ([a-h][1-8][a-h][1-8][qrbn]?)/)?.[1],
-            output: result.output
-          });
-        } else {
-          setError(result.error || 'Unknown error');
-        }
+        console.log('Server response:', result);
+        setAnalysis({
+          depth,
+          score: result.eval,
+          bestMove: result.output?.match(/bestmove ([a-h][1-8][a-h][1-8][qrbn]?)/)?.[1],
+          output: result.output
+        });
       })
-      .catch(async err => {
+      .catch(err => {
         if (!isMounted) return;
         if (err.name === 'AbortError') {
           setError('Timeout: silnik nie odpowiedział w 30 sekund. Jeśli to pierwszy request, serwer mógł być uśpiony - spróbuj ponownie.');
         } else {
-          // Próbujemy pobrać więcej szczegółów o błędzie
-          if (err instanceof Response) {
-            try {
-              const errorData = await err.json();
-              console.error('Server error details:', errorData);
-              setError(`Błąd serwera: ${errorData.error || errorData.message || JSON.stringify(errorData)}`);
-            } catch {
-              setError(`Błąd serwera: ${err.status} ${err.statusText}`);
+          console.error('Error details:', err);
+          setError(err.message || 'Network error');
+          // Po błędzie spróbujmy ponownie za 5 sekund
+          setTimeout(() => {
+            if (isMounted) {
+              console.log('Retrying after error...');
+              setError(null);
+              setIsAnalyzing(true);
             }
-          } else {
-            console.error('Error details:', err);
-            setError(err.message || 'Network error');
-          }
+          }, 5000);
         }
       })
       .finally(() => {
