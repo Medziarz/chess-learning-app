@@ -93,8 +93,8 @@ export function Analiza() {
       ])
     : [];
 
-  console.log('VITE_STOCKFISH_URL:', process.env.VITE_STOCKFISH_URL);
-  console.log('VITE_TEST:', process.env.VITE_TEST);
+  console.log('VITE_STOCKFISH_URL:', import.meta.env.VITE_STOCKFISH_URL);
+  console.log('VITE_TEST:', import.meta.env.VITE_TEST);
 
   return (
     <div className="analysis-container">

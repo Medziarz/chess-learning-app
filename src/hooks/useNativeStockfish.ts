@@ -22,10 +22,15 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
     setAnalysis(null);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
-  const apiUrl = process.env.VITE_STOCKFISH_URL || 'http://localhost:3001';
+  const apiUrl = import.meta.env.VITE_STOCKFISH_URL || 'http://localhost:3001';
   fetch(`${apiUrl}/analyze`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      mode: 'cors',
+      credentials: 'include',
       body: JSON.stringify({ fen, depth }),
       signal: controller.signal
     })

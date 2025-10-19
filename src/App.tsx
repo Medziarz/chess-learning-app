@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Rozgrywka } from './pages/Rozgrywka'
 import { Kalendarz } from './pages/Kalendarz'
 import { Profil } from './pages/Profil'
@@ -11,8 +11,11 @@ import TestChessboardArrows from './pages/TestChessboardArrows'
 import './App-simple.css'
 
 function Navigation() {
-  const navigate = useNavigate()
   const location = useLocation()
+  
+  const navigateTo = (path: string) => {
+    window.location.href = path
+  }
 
   const isActive = (path: string) => location.pathname === path
 
@@ -20,43 +23,43 @@ function Navigation() {
     <nav className="tab-navigation">
       <button 
         className={`tab-button ${isActive('/') || isActive('/rozgrywka') ? 'active' : ''}`}
-        onClick={() => navigate('/rozgrywka')}
+        onClick={() => navigateTo('/rozgrywka')}
       >
         ♟️ Rozgrywka
       </button>
       <button 
         className={`tab-button ${isActive('/kalendarz') ? 'active' : ''}`}
-        onClick={() => navigate('/kalendarz')}
+        onClick={() => navigateTo('/kalendarz')}
       >
         📅 Kalendarz
       </button>
       <button 
         className={`tab-button ${isActive('/profil') ? 'active' : ''}`}
-        onClick={() => navigate('/profil')}
+        onClick={() => navigateTo('/profil')}
       >
         👤 Profil
       </button>
       <button 
         className={`tab-button ${isActive('/analiza') ? 'active' : ''}`}
-        onClick={() => navigate('/analiza')}
+        onClick={() => navigateTo('/analiza')}
       >
         🔍 Analiza
       </button>
       <button 
         className={`tab-button ${isActive('/treningi') ? 'active' : ''}`}
-        onClick={() => navigate('/treningi')}
+        onClick={() => navigateTo('/treningi')}
       >
         💪 Treningi
       </button>
       <button 
         className={`tab-button ${isActive('/aktualnosci') ? 'active' : ''}`}
-        onClick={() => navigate('/aktualnosci')}
+        onClick={() => navigateTo('/aktualnosci')}
       >
         📰 Aktualności
       </button>
       <button 
         className={`tab-button ${isActive('/ustawienia') ? 'active' : ''}`}
-        onClick={() => navigate('/ustawienia')}
+        onClick={() => navigateTo('/ustawienia')}
       >
         ⚙️ Ustawienia
       </button>

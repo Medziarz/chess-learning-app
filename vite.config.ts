@@ -14,7 +14,9 @@ export default defineConfig({
     // Enable specific features for WASM
     fs: {
       allow: ['..']
-    }
+    },
+    // Enable HTML5 History API routing
+    historyApiFallback: true
   },
   optimizeDeps: {
     exclude: ['stockfish.wasm', 'stockfish', 'stockfish.js']
