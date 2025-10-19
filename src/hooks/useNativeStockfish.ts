@@ -24,6 +24,9 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
     // Zwiększamy timeout do 30 sekund, bo Render.com może potrzebować więcej czasu na pierwszy request
     const timeout = setTimeout(() => controller.abort(), 30000);
   const apiUrl = import.meta.env.VITE_STOCKFISH_URL || 'http://localhost:3001';
+  console.log('Sending request to:', apiUrl);
+  console.log('Request payload:', { fen, depth });
+  
   fetch(`${apiUrl}/analyze`, {
       method: 'POST',
       headers: { 
@@ -49,12 +52,24 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
           setError(result.error || 'Unknown error');
         }
       })
-      .catch(err => {
+      .catch(async err => {
         if (!isMounted) return;
         if (err.name === 'AbortError') {
           setError('Timeout: silnik nie odpowiedział w 30 sekund. Jeśli to pierwszy request, serwer mógł być uśpiony - spróbuj ponownie.');
         } else {
-          setError(err.message || 'Network error');
+          // Próbujemy pobrać więcej szczegółów o błędzie
+          if (err instanceof Response) {
+            try {
+              const errorData = await err.json();
+              console.error('Server error details:', errorData);
+              setError(`Błąd serwera: ${errorData.error || errorData.message || JSON.stringify(errorData)}`);
+            } catch {
+              setError(`Błąd serwera: ${err.status} ${err.statusText}`);
+            }
+          } else {
+            console.error('Error details:', err);
+            setError(err.message || 'Network error');
+          }
         }
       })
       .finally(() => {
