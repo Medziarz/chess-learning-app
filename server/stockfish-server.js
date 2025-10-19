@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors')
 const { spawn } = require('child_process')
 const path = require('path')
+const fs = require('fs')
 
 const app = express()
 const PORT = 3001
@@ -36,7 +37,10 @@ class StockfishEngine {
   initEngine() {
     try {
       // Use system stockfish
-      const enginePath = 'stockfish'
+      const enginePath = '/usr/games/stockfish'
+      
+      if (!fs.existsSync(enginePath)) {
+        throw new Error(`Stockfish not found at ${enginePath}`)
       
       console.log('🚀 Starting Stockfish engine...')
       this.engine = spawn(enginePath, [], {

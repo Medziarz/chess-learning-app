@@ -1,9 +1,14 @@
 FROM node:18-slim
 
-# Install Stockfish
+# Install dependencies and Stockfish
 RUN apt-get update && \
-    apt-get install -y stockfish && \
+    apt-get install -y stockfish procps && \
+    chmod +x /usr/games/stockfish && \
+    ln -s /usr/games/stockfish /usr/local/bin/stockfish && \
     rm -rf /var/lib/apt/lists/*
+
+# Verify Stockfish installation
+RUN stockfish --version
 
 # Create app directory
 WORKDIR /app
