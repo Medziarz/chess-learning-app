@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Chess } from 'chess.js';
+import { Chess, Square } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useNativeStockfish } from '../hooks/useNativeStockfish';
 
@@ -30,19 +30,54 @@ export function Analiza() {
     }
   }, [analysis, depth, fenRef.current]);
 
-  // Aktualizuj wyświetlaną analizę od głębi 20, a potem tylko jeśli wynik się zmieni
+  // Aktualizuj wyświetlaną analizę od głębi 15, tylko jeśli wynik spełnia kryteria jakości
   useEffect(() => {
-    if (analysis && depth >= 20) {
+    if (analysis && depth >= 15) {
       console.log('Analysis update:', analysis);
-      // Only update if new analysis is different
-      const newScore = typeof analysis.score === 'number' ? analysis.score : analysis.score;
-      if (!displayAnalysis || displayAnalysis.score !== newScore || displayAnalysis.bestMove !== analysis.bestMove) {
-        console.log('Updating display analysis with:', { score: newScore, bestMove: analysis.bestMove });
-        setDisplayAnalysis({ score: newScore, bestMove: analysis.bestMove ?? null });
+      
+      // Sprawdź czy analiza jest odpowiedniej jakości
+      const isValidAnalysis = analysis.bestMove && 
+        analysis.score !== undefined && 
+        analysis.score !== null &&
+        (typeof analysis.score === 'number' || !isNaN(Number(analysis.score)));
+
+      if (isValidAnalysis) {
+        const newScore = typeof analysis.score === 'number' ? analysis.score : Number(analysis.score);
+        const currentTurn = game.turn(); // 'w' dla białych, 'b' dla czarnych
+        
+        // Jeśli bestMove zaczyna się od pola, które ma figurę koloru zgodnego z aktualnym ruchem
+        const move = analysis.bestMove;
+        const sourceSquare = move?.slice(0, 2) as Square;
+        const pieceColor = sourceSquare ? game.get(sourceSquare)?.color : null;
+        const isMoveColorValid = !move || (pieceColor === currentTurn);
+
+        if (isMoveColorValid) {
+          console.log('Valid analysis found:', { 
+            score: newScore,
+            bestMove: analysis.bestMove,
+            currentTurn,
+            pieceColor,
+            depth 
+          });
+          
+          if (!displayAnalysis || 
+              displayAnalysis.score !== newScore || 
+              displayAnalysis.bestMove !== analysis.bestMove) {
+            console.log('Updating display analysis with:', { score: newScore, bestMove: analysis.bestMove });
+            setDisplayAnalysis({ score: newScore, bestMove: analysis.bestMove ?? null });
+          }
+        } else {
+          console.log('Invalid move color:', { 
+            bestMove: analysis.bestMove, 
+            currentTurn, 
+            pieceColor 
+          });
+        }
+      } else {
+        console.log('Invalid analysis:', analysis);
       }
-      // Do NOT clear displayAnalysis between depths
     }
-  }, [analysis, depth]);
+  }, [analysis, depth, game]);
 
   // Resetuj głębię i ewaluację po ruchu lub cofnięciu
   useEffect(() => {
