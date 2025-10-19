@@ -7,7 +7,7 @@ export function Analiza() {
   const [game, setGame] = useState(new Chess());
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [analysisHistory, setAnalysisHistory] = useState<string[]>([]);
-  const [depth, setDepth] = useState(20);
+  const [depth, setDepth] = useState(15); // Zaczynamy od głębi 15
   const [displayAnalysis, setDisplayAnalysis] = useState<{ score: any; bestMove: string | null } | null>(null);
   const fenRef = useRef(game.fen());
 
@@ -17,18 +17,19 @@ export function Analiza() {
   // Request next depth only after analysis for current depth is received
   useEffect(() => {
     if (depth < 100 && analysis) {
+      // Szybsze zwiększanie głębi na początku, wolniejsze później
       let delay;
-      if (depth < 25) {
-        delay = 100;
+      if (depth < 20) {
+        delay = 50; // Bardzo szybko do głębi 20
+      } else if (depth < 25) {
+        delay = 100; // Trochę wolniej do 25
       } else {
-        const base = 500;
-        const factor = 50;
-        delay = base + factor * Math.pow(depth - 20, 2);
+        delay = 200; // Stała prędkość powyżej 25
       }
       const timer = setTimeout(() => setDepth(depth + 1), delay);
       return () => clearTimeout(timer);
     }
-  }, [analysis, depth, fenRef.current]);
+  }, [analysis, depth]);
 
   // Aktualizuj wyświetlaną analizę od głębi 15, tylko jeśli wynik spełnia kryteria jakości
   useEffect(() => {
@@ -82,7 +83,7 @@ export function Analiza() {
   // Resetuj głębię i ewaluację po ruchu lub cofnięciu
   useEffect(() => {
     fenRef.current = game.fen();
-    setDepth(20);
+    setDepth(15); // Zaczynamy od 15
     setDisplayAnalysis(null);
   }, [game.fen()]);
 
