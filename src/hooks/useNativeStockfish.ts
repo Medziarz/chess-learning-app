@@ -31,7 +31,6 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
         'Accept': 'application/json'
       },
       mode: 'cors',
-      credentials: 'include',
       body: JSON.stringify({ fen, depth }),
       signal: controller.signal
     })
