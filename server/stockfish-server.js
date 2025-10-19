@@ -41,6 +41,7 @@ class StockfishEngine {
       
       if (!fs.existsSync(enginePath)) {
         throw new Error(`Stockfish not found at ${enginePath}`)
+      }
       
       console.log('🚀 Starting Stockfish engine...')
       this.engine = spawn(enginePath, [], {
