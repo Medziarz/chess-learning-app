@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Chess, Square } from 'chess.js';
+import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useNativeStockfish } from '../hooks/useNativeStockfish';
 
@@ -31,51 +31,35 @@ export function Analiza() {
     }
   }, [analysis, depth]);
 
-  // Aktualizuj wyświetlaną analizę od głębi 15, tylko jeśli wynik spełnia kryteria jakości
+  // Aktualizuj wyświetlaną analizę natychmiast jak otrzymamy jakikolwiek ruch
   useEffect(() => {
-    if (analysis && depth >= 15) {
+    if (analysis) {
       console.log('Analysis update:', analysis);
       
-      // Sprawdź czy analiza jest odpowiedniej jakości
-      const isValidAnalysis = analysis.bestMove && 
-        analysis.score !== undefined && 
-        analysis.score !== null &&
+      // Sprawdź czy mamy ruch lub ewaluację
+      const hasMove = analysis.bestMove && analysis.bestMove.length >= 4;
+      const hasScore = analysis.score !== undefined && analysis.score !== null &&
         (typeof analysis.score === 'number' || !isNaN(Number(analysis.score)));
 
-      if (isValidAnalysis) {
-        const newScore = typeof analysis.score === 'number' ? analysis.score : Number(analysis.score);
-        const currentTurn = game.turn(); // 'w' dla białych, 'b' dla czarnych
-        
-        // Jeśli bestMove zaczyna się od pola, które ma figurę koloru zgodnego z aktualnym ruchem
-        const move = analysis.bestMove;
-        const sourceSquare = move?.slice(0, 2) as Square;
-        const pieceColor = sourceSquare ? game.get(sourceSquare)?.color : null;
-        const isMoveColorValid = !move || (pieceColor === currentTurn);
+      // Konwertuj score na liczbę jeśli mamy ewaluację
+      const newScore = hasScore 
+        ? (typeof analysis.score === 'number' ? analysis.score : Number(analysis.score))
+        : null;
 
-        if (isMoveColorValid) {
-          console.log('Valid analysis found:', { 
-            score: newScore,
-            bestMove: analysis.bestMove,
-            currentTurn,
-            pieceColor,
-            depth 
-          });
-          
-          if (!displayAnalysis || 
-              displayAnalysis.score !== newScore || 
-              displayAnalysis.bestMove !== analysis.bestMove) {
-            console.log('Updating display analysis with:', { score: newScore, bestMove: analysis.bestMove });
-            setDisplayAnalysis({ score: newScore, bestMove: analysis.bestMove ?? null });
-          }
-        } else {
-          console.log('Invalid move color:', { 
-            bestMove: analysis.bestMove, 
-            currentTurn, 
-            pieceColor 
-          });
-        }
-      } else {
-        console.log('Invalid analysis:', analysis);
+      // Aktualizuj display jeśli mamy nowy ruch lub nową ewaluację
+      if (hasMove || hasScore) {
+        console.log('Updating analysis:', { 
+          score: newScore,
+          bestMove: analysis.bestMove,
+          depth,
+          turn: game.turn()
+        });
+
+        const updatedAnalysis = {
+          score: hasScore ? newScore : (displayAnalysis?.score ?? null),
+          bestMove: hasMove ? analysis.bestMove : (displayAnalysis?.bestMove ?? null)
+        };
+        setDisplayAnalysis(updatedAnalysis);
       }
     }
   }, [analysis, depth, game]);
