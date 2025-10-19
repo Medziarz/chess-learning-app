@@ -21,7 +21,8 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
     setError(null);
     setAnalysis(null);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    // Zwiększamy timeout do 30 sekund, bo Render.com może potrzebować więcej czasu na pierwszy request
+    const timeout = setTimeout(() => controller.abort(), 30000);
   const apiUrl = import.meta.env.VITE_STOCKFISH_URL || 'http://localhost:3001';
   fetch(`${apiUrl}/analyze`, {
       method: 'POST',
@@ -52,7 +53,7 @@ export function useNativeStockfish(fen: string, depth: number = 15) {
       .catch(err => {
         if (!isMounted) return;
         if (err.name === 'AbortError') {
-          setError('Timeout: silnik nie odpowiedział w 15 sekund');
+          setError('Timeout: silnik nie odpowiedział w 30 sekund. Jeśli to pierwszy request, serwer mógł być uśpiony - spróbuj ponownie.');
         } else {
           setError(err.message || 'Network error');
         }
