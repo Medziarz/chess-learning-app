@@ -9,7 +9,16 @@ const PORT = 3001
 
 // Enable CORS for your frontend
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'https://medarddahms.pl'],
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5174', 
+    'http://localhost:5175', 
+    'http://localhost:5176', 
+    'https://medarddahms.pl',
+    'https://www.medarddahms.pl',
+    'http://medarddahms.pl',
+    'http://www.medarddahms.pl'
+  ],
   credentials: false
 }))
 
