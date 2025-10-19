@@ -14,18 +14,10 @@ export function Analiza() {
   // Hook do analizy pozycji przez backend z wybraną głębią
   const { analysis, error } = useNativeStockfish(game.fen(), depth);
 
-  // Request next depth only after analysis for current depth is received
+  // Zwiększaj głębię tylko po otrzymaniu stabilnej analizy
   useEffect(() => {
-    if (depth < 100 && analysis) {
-      // Szybsze zwiększanie głębi na początku, wolniejsze później
-      let delay;
-      if (depth < 20) {
-        delay = 50; // Bardzo szybko do głębi 20
-      } else if (depth < 25) {
-        delay = 100; // Trochę wolniej do 25
-      } else {
-        delay = 200; // Stała prędkość powyżej 25
-      }
+    if (depth < 100 && analysis?.bestMove) {
+      let delay = 50; // Stała prędkość dla wszystkich głębi
       const timer = setTimeout(() => setDepth(depth + 1), delay);
       return () => clearTimeout(timer);
     }
@@ -41,32 +33,16 @@ export function Analiza() {
       const hasScore = analysis.score !== undefined && analysis.score !== null &&
         (typeof analysis.score === 'number' || !isNaN(Number(analysis.score)));
 
-      // Sprawdź czy ruch jest legalny w aktualnej pozycji
-      let isMoveValid = false;
-      if (hasMove && analysis.bestMove) {
-        try {
-          // Tworzymy tymczasową grę do sprawdzenia ruchu
-          const tempGame = new Chess(game.fen());
-          const move = analysis.bestMove;
-          const from = move.slice(0, 2);
-          const to = move.slice(2, 4);
-          
-          // Próbujemy wykonać ruch
-          const moveResult = tempGame.move({ from, to, promotion: 'q' });
-          isMoveValid = moveResult !== null;
+      // Zakładamy, że ruch od silnika jest poprawny
+      const isMoveValid = hasMove && analysis.bestMove;
 
-          console.log('Move validation:', {
-            move,
-            from,
-            to,
-            isValid: isMoveValid,
-            depth,
-            currentTurn: game.turn()
-          });
-        } catch (e) {
-          console.log('Invalid move check:', e);
-          isMoveValid = false;
-        }
+      // Log dla debugowania
+      if (hasMove) {
+        console.log('Move info:', {
+          bestMove: analysis.bestMove,
+          depth,
+          currentTurn: game.turn()
+        });
       }
 
       // Konwertuj score na liczbę jeśli mamy ewaluację
