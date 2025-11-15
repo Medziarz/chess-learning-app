@@ -53,19 +53,22 @@ export function Treningi() {
   const loadPuzzles = async () => {
     setLoadingPuzzles(true)
     try {
+      console.log('Fetching puzzles from Supabase...')
+      
       const { data, error } = await supabase
         .from('puzzles')
-        .select('PuzzleId, FEN, Moves, Rating, RatingDeviation, Popularity, NbPlays, Themes, GameUrl, OpeningTags')
-        .limit(100)
+        .select()
+      
+      console.log('Response:', { data, error })
 
       if (error) {
-        console.error('Error fetching puzzles:', error)
+        console.error('Error:', error)
         setPuzzles([])
       } else {
         setPuzzles(data || [])
       }
     } catch (err) {
-      console.error('Puzzle fetch exception:', err)
+      console.error('Exception:', err)
       setPuzzles([])
     }
     setLoadingPuzzles(false)
@@ -276,71 +279,36 @@ export function Treningi() {
                   <table style={{
                     width: '100%',
                     borderCollapse: 'collapse',
-                    fontSize: '14px'
+                    fontSize: '12px'
                   }}>
                     <thead>
                       <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
-                        <th style={{ padding: '10px', textAlign: 'left' }}>ID</th>
-                        <th style={{ padding: '10px', textAlign: 'left' }}>FEN</th>
-                        <th style={{ padding: '10px', textAlign: 'left' }}>Ruchy (UCI)</th>
-                        <th style={{ padding: '10px', textAlign: 'center' }}>Rating</th>
-                        <th style={{ padding: '10px', textAlign: 'center' }}>Popularność</th>
-                        <th style={{ padding: '10px', textAlign: 'center' }}>Ilość gier</th>
-                        <th style={{ padding: '10px', textAlign: 'center' }}>Tematy</th>
-                        <th style={{ padding: '10px', textAlign: 'left' }}>Link</th>
+                        {puzzles.length > 0 && Object.keys(puzzles[0]).map(key => (
+                          <th key={key} style={{ padding: '8px', textAlign: 'left', borderRight: '1px solid #ddd' }}>
+                            {key}
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>
                       {puzzles.map((puzzle, idx) => (
-                        <tr key={puzzle.PuzzleId} style={{
+                        <tr key={idx} style={{
                           borderBottom: '1px solid #eee',
                           backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fafafa'
                         }}>
-                          <td style={{ padding: '10px' }}>{puzzle.PuzzleId}</td>
-                          <td style={{ 
-                            padding: '10px',
-                            fontFamily: 'monospace',
-                            fontSize: '12px',
-                            maxWidth: '300px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
-                            {puzzle.FEN}
-                          </td>
-                          <td style={{ 
-                            padding: '10px',
-                            fontFamily: 'monospace',
-                            fontSize: '12px',
-                            maxWidth: '200px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
-                            {puzzle.Moves}
-                          </td>
-                          <td style={{ padding: '10px', textAlign: 'center' }}>
-                            {puzzle.Rating || '-'}
-                          </td>
-                          <td style={{ padding: '10px', textAlign: 'center' }}>
-                            {puzzle.Popularity || '-'}
-                          </td>
-                          <td style={{ padding: '10px', textAlign: 'center' }}>
-                            {puzzle.NbPlays || '-'}
-                          </td>
-                          <td style={{ padding: '10px', textAlign: 'center', fontSize: '12px' }}>
-                            {Array.isArray(puzzle.Themes) ? puzzle.Themes.slice(0, 2).join(',') : puzzle.Themes || '-'}
-                          </td>
-                          <td style={{ padding: '10px' }}>
-                            {puzzle.GameUrl && (
-                              <a 
-                                href={puzzle.GameUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                style={{ color: '#2196F3', textDecoration: 'none' }}
-                              >
-                                🔗
-                              </a>
-                            )}
-                          </td>
+                          {Object.values(puzzle).map((value, colIdx) => (
+                            <td key={colIdx} style={{ 
+                              padding: '8px',
+                              borderRight: '1px solid #eee',
+                              maxWidth: '200px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              fontSize: '11px'
+                            }}>
+                              {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                            </td>
+                          ))}
                         </tr>
                       ))}
                     </tbody>
