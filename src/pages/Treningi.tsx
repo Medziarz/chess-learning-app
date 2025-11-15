@@ -1,5 +1,23 @@
 import { useState, useEffect } from 'react'
-import { fetchPuzzles, Puzzle } from '../lib/supabaseClient'
+import { createClient } from '@supabase/supabase-js'
+
+// Inicjalizacja Supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
+
+interface Puzzle {
+  PuzzleId: string
+  FEN: string
+  Moves: string
+  Rating?: number
+  RatingDeviation?: number
+  Popularity?: number
+  NbPlays?: number
+  Themes?: string | string[]
+  GameUrl?: string
+  OpeningTags?: string | string[]
+}
 
 interface TrainingExercise {
   id: string
@@ -34,8 +52,22 @@ export function Treningi() {
 
   const loadPuzzles = async () => {
     setLoadingPuzzles(true)
-    const data = await fetchPuzzles(100)
-    setPuzzles(data)
+    try {
+      const { data, error } = await supabase
+        .from('puzzles')
+        .select('PuzzleId, FEN, Moves, Rating, RatingDeviation, Popularity, NbPlays, Themes, GameUrl, OpeningTags')
+        .limit(100)
+
+      if (error) {
+        console.error('Error fetching puzzles:', error)
+        setPuzzles([])
+      } else {
+        setPuzzles(data || [])
+      }
+    } catch (err) {
+      console.error('Puzzle fetch exception:', err)
+      setPuzzles([])
+    }
     setLoadingPuzzles(false)
   }
   
