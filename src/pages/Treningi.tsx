@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { fetchPuzzles, Puzzle } from '../lib/supabaseClient'
 
 interface TrainingExercise {
   id: string
@@ -21,6 +22,22 @@ interface TrainingStats {
 export function Treningi() {
   const [activeCategory, setActiveCategory] = useState<'tactics' | 'endgame' | 'opening' | 'middlegame'>('tactics')
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all')
+  const [viewMode, setViewMode] = useState<'training' | 'puzzles'>('training')
+  const [puzzles, setPuzzles] = useState<Puzzle[]>([])
+  const [loadingPuzzles, setLoadingPuzzles] = useState(false)
+  
+  useEffect(() => {
+    if (viewMode === 'puzzles') {
+      loadPuzzles()
+    }
+  }, [viewMode])
+
+  const loadPuzzles = async () => {
+    setLoadingPuzzles(true)
+    const data = await fetchPuzzles(100)
+    setPuzzles(data)
+    setLoadingPuzzles(false)
+  }
   
   const [exercises] = useState<TrainingExercise[]>([
     {
@@ -169,7 +186,141 @@ export function Treningi() {
     <div className="tab-content">
       <h2>💪 Treningi szachowe</h2>
       
-      <div className="training-container">
+      {/* Tab buttons for switching between training and puzzles */}
+      <div className="training-mode-tabs" style={{
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '20px',
+        borderBottom: '1px solid #ddd',
+        paddingBottom: '10px'
+      }}>
+        <button
+          onClick={() => setViewMode('training')}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: viewMode === 'training' ? '#4CAF50' : '#f0f0f0',
+            color: viewMode === 'training' ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: viewMode === 'training' ? 'bold' : 'normal'
+          }}
+        >
+          📚 Standardowe treningi
+        </button>
+        <button
+          onClick={() => setViewMode('puzzles')}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: viewMode === 'puzzles' ? '#2196F3' : '#f0f0f0',
+            color: viewMode === 'puzzles' ? 'white' : '#333',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: viewMode === 'puzzles' ? 'bold' : 'normal'
+          }}
+        >
+          🧩 Puzzles z bazy
+        </button>
+      </div>
+
+      {/* Puzzles view */}
+      {viewMode === 'puzzles' && (
+        <div className="puzzles-container" style={{ marginBottom: '20px' }}>
+          <div className="training-panel">
+            <h3>🧩 Puzzles z Supabase</h3>
+            <div className="panel-content">
+              {loadingPuzzles ? (
+                <p>Ładowanie puzzles...</p>
+              ) : puzzles.length === 0 ? (
+                <p style={{ color: '#666' }}>
+                  Brak puzzles w bazie. Upewnij się, że:
+                  <br />1. Dodałeś dane do tabeli "puzzles" w Supabase
+                  <br />2. Zmienne VITE_SUPABASE_URL i VITE_SUPABASE_ANON_KEY są ustawione w .env.local
+                  <br />3. Permissje (RLS) są prawidłowo skonfigurowane
+                </p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    fontSize: '14px'
+                  }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
+                        <th style={{ padding: '10px', textAlign: 'left' }}>ID</th>
+                        <th style={{ padding: '10px', textAlign: 'left' }}>FEN</th>
+                        <th style={{ padding: '10px', textAlign: 'left' }}>Ruchy (UCI)</th>
+                        <th style={{ padding: '10px', textAlign: 'center' }}>Rating</th>
+                        <th style={{ padding: '10px', textAlign: 'center' }}>Popularność</th>
+                        <th style={{ padding: '10px', textAlign: 'center' }}>Ilość gier</th>
+                        <th style={{ padding: '10px', textAlign: 'center' }}>Tematy</th>
+                        <th style={{ padding: '10px', textAlign: 'left' }}>Link</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {puzzles.map((puzzle, idx) => (
+                        <tr key={puzzle.PuzzleId} style={{
+                          borderBottom: '1px solid #eee',
+                          backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fafafa'
+                        }}>
+                          <td style={{ padding: '10px' }}>{puzzle.PuzzleId}</td>
+                          <td style={{ 
+                            padding: '10px',
+                            fontFamily: 'monospace',
+                            fontSize: '12px',
+                            maxWidth: '300px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {puzzle.FEN}
+                          </td>
+                          <td style={{ 
+                            padding: '10px',
+                            fontFamily: 'monospace',
+                            fontSize: '12px',
+                            maxWidth: '200px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {puzzle.Moves}
+                          </td>
+                          <td style={{ padding: '10px', textAlign: 'center' }}>
+                            {puzzle.Rating || '-'}
+                          </td>
+                          <td style={{ padding: '10px', textAlign: 'center' }}>
+                            {puzzle.Popularity || '-'}
+                          </td>
+                          <td style={{ padding: '10px', textAlign: 'center' }}>
+                            {puzzle.NbPlays || '-'}
+                          </td>
+                          <td style={{ padding: '10px', textAlign: 'center', fontSize: '12px' }}>
+                            {Array.isArray(puzzle.Themes) ? puzzle.Themes.slice(0, 2).join(',') : puzzle.Themes || '-'}
+                          </td>
+                          <td style={{ padding: '10px' }}>
+                            {puzzle.GameUrl && (
+                              <a 
+                                href={puzzle.GameUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ color: '#2196F3', textDecoration: 'none' }}
+                              >
+                                🔗
+                              </a>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="training-container" style={{ display: viewMode === 'puzzles' ? 'none' : 'block' }}>
         {/* Panel statystyk */}
         <div className="training-panel">
           <h3>📊 Twoje statystyki</h3>
