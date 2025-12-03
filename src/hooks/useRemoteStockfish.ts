@@ -73,7 +73,7 @@ export function useRemoteStockfish(): UseRemoteStockfishReturn {
 
   return {
     analysis,
-    isReady,
+    isReady: true,
     isAnalyzing,
     analyzePosition,
     stopAnalysis,
