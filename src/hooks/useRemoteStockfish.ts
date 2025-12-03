@@ -20,7 +20,6 @@ export interface UseRemoteStockfishReturn {
 
 export function useRemoteStockfish(): UseRemoteStockfishReturn {
   const [analysis, setAnalysis] = useState<StockfishAnalysis | null>(null)
-  const [isReady, setIsReady] = useState(true) // Always ready for HTTP
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
