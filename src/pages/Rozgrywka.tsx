@@ -236,11 +236,11 @@ export function Rozgrywka() {
 
   // Analyze position for Stockfish when it's AI turn
   useEffect(() => {
-    if (gameStarted && stockfishReady && !isCurrentlyPlayerTurn() && !gameState.isGameOver && !isAiThinking) {
+    if (gameStarted && stockfishReady && !isCurrentlyPlayerTurn() && !gameState.isGameOver && !isAiThinking && !analysis?.bestMove) {
       console.log(`🤖 Stockfish analyzing position (ELO ${eloLevel})...`)
       analyzePosition(game.fen(), 20, eloLevel)
     }
-  }, [gameStarted, stockfishReady, game, gameState.isGameOver, playerColor, eloLevel, analyzePosition, isAiThinking])
+  }, [gameStarted, stockfishReady, game, gameState.isGameOver, playerColor, eloLevel, analyzePosition, isAiThinking, analysis?.bestMove])
 
   // Make Stockfish move when analysis is ready
   useEffect(() => {
