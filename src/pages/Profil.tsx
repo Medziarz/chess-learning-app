@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { useSupabase } from '../hooks/useSupabase'
 
 export function Profil() {
+  const supabase = useSupabase()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')

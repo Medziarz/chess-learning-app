@@ -1,12 +1,8 @@
 import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-// Inicjalizacja Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { useSupabase } from '../hooks/useSupabase'
 
 export function Register() {
+  const supabase = useSupabase()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

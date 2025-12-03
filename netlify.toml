@@ -18,7 +18,7 @@
     X-XSS-Protection = "1; mode=block"
     
     # Content Security Policy
-    Content-Security-Policy = "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://stockfish.js.org https://*.supabase.co; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.github.com http://localhost:3001; frame-ancestors 'none';"
+    Content-Security-Policy = "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://stockfish.js.org https://*.supabase.co; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.github.com https://chess-learning-app.onrender.com http://localhost:3001; frame-ancestors 'none';"
     
     # Referrer policy
     Referrer-Policy = "strict-origin-when-cross-origin"

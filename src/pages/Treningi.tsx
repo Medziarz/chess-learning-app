@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useSupabase } from '../hooks/useSupabase'
 import { Chessboard } from 'react-chessboard'
 import { Chess } from 'chess.js'
-
-// Inicjalizacja Supabase — UŻYWAMY ZMIENNYCH ŚRODOWISKOWYCH
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
 
 interface Puzzle {
   PuzzleId: string
@@ -22,6 +17,7 @@ interface Puzzle {
 }
 
 export function Treningi() {
+  const supabase = useSupabase()
   const [activePuzzle, setActivePuzzle] = useState<Puzzle | null>(null)
   const [puzzleResult, setPuzzleResult] = useState<'correct' | 'incorrect' | null>(null)
   const [allPuzzles, setAllPuzzles] = useState<Puzzle[]>([])

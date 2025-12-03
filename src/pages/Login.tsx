@@ -1,13 +1,9 @@
 import { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useSupabase } from '../hooks/useSupabase'
 import { useNavigate } from 'react-router-dom'
 
-// Inicjalizacja Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 export function Login() {
+  const supabase = useSupabase()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
