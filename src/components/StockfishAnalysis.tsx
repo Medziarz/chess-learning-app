@@ -1,4 +1,4 @@
-import { useStockfish } from '../hooks/useStockfish'
+import { useRemoteStockfish } from '../hooks/useRemoteStockfish'
 import { useEffect } from 'react'
 
 interface StockfishAnalysisProps {
@@ -12,7 +12,7 @@ export const StockfishAnalysis: React.FC<StockfishAnalysisProps> = ({ currentFen
     analysis,
     analyzePosition, 
     stopAnalysis
-  } = useStockfish()
+  } = useRemoteStockfish()
 
   // Automatyczna ocena przy zmianie pozycji
   useEffect(() => {

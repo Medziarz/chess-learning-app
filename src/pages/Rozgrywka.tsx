@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
-import { useStockfish } from '../hooks/useStockfish'
+import { useRemoteStockfish } from '../hooks/useRemoteStockfish'
 
 interface GameState {
   fen: string
@@ -23,12 +23,12 @@ export function Rozgrywka() {
   
   // Stockfish settings
   const [playerColor, setPlayerColor] = useState<PlayerColor>('white')
-  const [skillLevel, setSkillLevel] = useState(5)
+  const [eloLevel, setEloLevel] = useState(2000)
   const [gameStarted, setGameStarted] = useState(false)
   const [isAiThinking, setIsAiThinking] = useState(false)
   
   // Stockfish integration
-  const { analysis, isReady: stockfishReady, analyzePosition } = useStockfish()
+  const { analysis, isReady: stockfishReady, analyzePosition } = useRemoteStockfish()
 
   // Save game state to localStorage
   const saveGameToStorage = () => {
@@ -36,7 +36,7 @@ export function Rozgrywka() {
       fen: game.fen(),
       gameState,
       playerColor,
-      skillLevel,
+      eloLevel,
       gameStarted
     }
     localStorage.setItem('chess-game-state', JSON.stringify(gameData))
@@ -52,7 +52,7 @@ export function Rozgrywka() {
         setGame(restoredGame)
         setGameState(gameData.gameState)
         setPlayerColor(gameData.playerColor)
-        setSkillLevel(gameData.skillLevel)
+        setEloLevel(gameData.eloLevel || 2000)
         setGameStarted(gameData.gameStarted)
         return true
       }
@@ -73,7 +73,7 @@ export function Rozgrywka() {
     if (gameStarted) {
       saveGameToStorage()
     }
-  }, [game, gameState, playerColor, skillLevel, gameStarted])
+  }, [game, gameState, playerColor, eloLevel, gameStarted])
 
   // Check if it's player turn
   const isCurrentlyPlayerTurn = () => {
@@ -82,17 +82,17 @@ export function Rozgrywka() {
     return currentTurn === playerColor
   }
 
-  // Make Stockfish move with difficulty applied
+  // Make Stockfish move with ELO difficulty
   const makeStockfishMove = () => {
     if (!analysis?.bestMove || !stockfishReady) return
     
-    const settings = getDifficultySettings(skillLevel)
     const randomChance = Math.random() * 100
+    const accuracy = 85 // Default accuracy for ELO-based moves
     
     // Apply accuracy: sometimes make a random legal move instead of best move
     let moveToPlay = analysis.bestMove
     
-    if (randomChance > settings.accuracy) {
+    if (randomChance > accuracy) {
       // Make a weaker move - get random legal moves
       const gameCopy = new Chess(game.fen())
       const legalMoves = gameCopy.moves({ verbose: true })
@@ -101,10 +101,10 @@ export function Rozgrywka() {
         // Pick a random move that's not the best move (if possible)
         const randomMove = legalMoves[Math.floor(Math.random() * legalMoves.length)]
         moveToPlay = randomMove.from + randomMove.to + (randomMove.promotion || '')
-        console.log(`🎲 Playing weaker move due to ${settings.accuracy}% accuracy: ${randomMove.san}`)
+        console.log(`🎲 Playing weaker move (85% accuracy): ${randomMove.san}`)
       }
     } else {
-      console.log(`🎯 Playing best move (${settings.accuracy}% accuracy): ${analysis.bestMove}`)
+      console.log(`🎯 Playing best move (85% accuracy): ${analysis.bestMove}`)
     }
     
     // Convert castling notation from Stockfish format to Chess.js format (only for actual castling moves)
@@ -200,19 +200,6 @@ export function Rozgrywka() {
     }
   }
 
-  // Map difficulty level to accuracy percentage
-  const getDifficultySettings = (level: number) => {
-    // 8 levels: 1=60%, 2=70%, 3=75%, 4=80%, 5=85%, 6=90%, 7=95%, 8=100%
-    const accuracyLevels = [60, 70, 75, 80, 85, 90, 95, 100]
-    const accuracy = accuracyLevels[level - 1] || 60 // Default to 60% if invalid level
-    
-    return {
-      accuracy,
-      depth: Math.max(8, level + 7), // Depth scales from 8 to 15
-      skill: 20 // Always use max skill, but apply accuracy filter
-    }
-  }
-
   // Convert English chess notation to Polish notation
   const convertToPolishNotation = (move: string): string => {
     return move
@@ -250,11 +237,10 @@ export function Rozgrywka() {
   // Analyze position for Stockfish when it's AI turn
   useEffect(() => {
     if (gameStarted && stockfishReady && !isCurrentlyPlayerTurn() && !gameState.isGameOver && !isAiThinking) {
-      const settings = getDifficultySettings(skillLevel)
-      console.log(`🤖 Stockfish analyzing position (Level ${skillLevel} = ${settings.accuracy}% accuracy)...`)
-      analyzePosition(game.fen(), settings.depth, settings.skill)
+      console.log(`🤖 Stockfish analyzing position (ELO ${eloLevel})...`)
+      analyzePosition(game.fen(), 20, eloLevel)
     }
-  }, [gameStarted, stockfishReady, game, gameState.isGameOver, playerColor, skillLevel, analyzePosition, isAiThinking])
+  }, [gameStarted, stockfishReady, game, gameState.isGameOver, playerColor, eloLevel, analyzePosition, isAiThinking])
 
   // Make Stockfish move when analysis is ready
   useEffect(() => {
@@ -365,37 +351,14 @@ export function Rozgrywka() {
               </div>
             </div>
             
-            <div className="engine-selection">
-              <label><strong>Silnik szachowy:</strong></label>
-              <div className="engine-buttons">
-                <button 
-                  onClick={() => {/* TODO: Add engine switching logic */}}
-                  className="active"
-                  title="Lichess Cloud Stockfish - szybki, ale czasami brak pozycji w bazie"
-                >
-                  ☁️ Cloud Stockfish
-                </button>
-                <button 
-                  onClick={() => {/* TODO: Add engine switching logic */}}
-                  className=""
-                  title="Lokalny Stockfish - wolniejszy, ale zawsze dokładny"
-                >
-                  🏠 Local Stockfish
-                </button>
-              </div>
-            </div>
-            
             <div className="difficulty-selection">
-              <label><strong>Poziom trudności Stockfish:</strong></label>
-              <select value={skillLevel} onChange={(e) => setSkillLevel(Number(e.target.value))}>
-                <option value={1}>Poziom 1 (60% dokładność - początkujący)</option>
-                <option value={2}>Poziom 2 (70% dokładność - słaby)</option>
-                <option value={3}>Poziom 3 (75% dokładność - amateur)</option>
-                <option value={4}>Poziom 4 (80% dokładność - przeciętny)</option>
-                <option value={5}>Poziom 5 (85% dokładność - dobry)</option>
-                <option value={6}>Poziom 6 (90% dokładność - bardzo dobry)</option>
-                <option value={7}>Poziom 7 (95% dokładność - ekspert)</option>
-                <option value={8}>Poziom 8 (100% dokładność - mistrz)</option>
+              <label><strong>🎯 Poziom gry (ELO):</strong></label>
+              <select value={eloLevel} onChange={(e) => setEloLevel(Number(e.target.value))}>
+                <option value={1000}>1000 ELO - Początkujący</option>
+                <option value={1500}>1500 ELO - Amatorski</option>
+                <option value={2000}>2000 ELO - Zaawansowany</option>
+                <option value={2500}>2500 ELO - Międzyczat</option>
+                <option value={3000}>3000 ELO - Mistrz</option>
               </select>
             </div>
             

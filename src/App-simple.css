@@ -1,23 +1,40 @@
 /* Simple CSS for testing drag & drop */
 
+html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   margin: 0;
+  padding: 0;
   font-family: Arial, sans-serif;
   background: #f0f0f0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .app {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 0;
+  width: 100vw;
+  margin: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-header {
   background: #333;
   color: white;
   padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  width: 100vw;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .app h1 {
@@ -28,7 +45,14 @@ body {
 .nav {
   display: flex;
   gap: 10px;
-  margin: 10px 0;
+  margin: 0;
+  padding: 10px 20px;
+  background: #333;
+  border-bottom: 1px solid #555;
+  flex-wrap: wrap;
+  width: 100vw;
+  box-sizing: border-box;
+  justify-content: center;
 }
 
 .nav a {
@@ -39,15 +63,35 @@ body {
   border-radius: 5px;
 }
 
+.nav button {
+  padding: 10px 15px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
 .nav a:hover, .nav a.active {
   background: #0056b3;
 }
 
 .main-content {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 0;
+  width: 100vw;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+.main-content > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .board-container {
@@ -55,6 +99,20 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 15px;
+}
+
+.app-footer {
+  background: #333;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  width: 100vw;
+  box-sizing: border-box;
+  margin-top: auto;
+}
+
+.app-footer p {
+  margin: 0;
 }
 
 .analysis-panel, .training-panel, .tournament-panel, .news-panel, .settings-panel {
@@ -77,6 +135,12 @@ body {
 /* Additional styles for Analiza component */
 .tab-content {
   padding: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .full-width {

@@ -6,6 +6,8 @@ import { Analiza } from './pages/Analiza'
 import { Treningi } from './pages/Treningi'
 import { Aktualnosci } from './pages/Aktualnosci'
 import { Ustawienia } from './pages/Ustawienia'
+import { Register } from './pages/Register'
+import { Login } from './pages/Login'
 import { TestLocal } from './pages/TestLocal'
 import TestChessboardArrows from './pages/TestChessboardArrows'
 import './App-simple.css'
@@ -20,7 +22,7 @@ function Navigation() {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <nav className="tab-navigation">
+    <nav className="nav">
       <button 
         className={`tab-button ${isActive('/') || isActive('/rozgrywka') ? 'active' : ''}`}
         onClick={() => navigateTo('/rozgrywka')}
@@ -63,23 +65,43 @@ function Navigation() {
       >
         ⚙️ Ustawienia
       </button>
+      <button 
+        className={`tab-button ${isActive('/register') ? 'active' : ''}`}
+        onClick={() => navigateTo('/register')}
+      >
+        📝 Rejestracja
+      </button>
+      <button 
+        className={`tab-button ${isActive('/login') ? 'active' : ''}`}
+        onClick={() => navigateTo('/login')}
+      >
+        🔓 Logowanie
+      </button>
     </nav>
   )
 }
 
 function AppContent() {
+  const location = useLocation()
+  const isAuthPage = location.pathname === '/register' || location.pathname === '/login'
+
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Chess Learning App</h1>
-        <p>Aplikacja do nauki szachów</p>
-      </header>
-
-      <Navigation />
+      {!isAuthPage && (
+        <>
+          <header className="app-header">
+            <h1>Chess Learning App</h1>
+            <p>Aplikacja do nauki szachów</p>
+          </header>
+          <Navigation />
+        </>
+      )}
       
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Navigate to="/rozgrywka" replace />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/rozgrywka" element={<Rozgrywka />} />
           <Route path="/kalendarz" element={<Kalendarz />} />
           <Route path="/profil" element={<Profil />} />
@@ -92,9 +114,11 @@ function AppContent() {
         </Routes>
       </main>
       
-      <footer className="app-footer">
-        <p>Wykorzystuje chess.js i react-chessboard</p>
-      </footer>
+      {!isAuthPage && (
+        <footer className="app-footer">
+          <p>Wykorzystuje chess.js i react-chessboard</p>
+        </footer>
+      )}
     </div>
   )
 }

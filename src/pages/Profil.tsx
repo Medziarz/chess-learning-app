@@ -1,300 +1,534 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { createClient } from '@supabase/supabase-js'
 
-interface PlayerStats {
-  gamesPlayed: number
-  wins: number
-  draws: number
-  losses: number
-  rating: number
-  ratingHistory: { date: string, rating: number }[]
-  favoriteOpening: string
-  averageGameTime: number
-  longestWinStreak: number
-  currentStreak: number
-  tacticalRating: number
-  puzzlesSolved: number
-}
-
-interface Achievement {
-  id: string
-  title: string
-  description: string
-  icon: string
-  unlocked: boolean
-  unlockedDate?: string
-}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export function Profil() {
-  const [playerName, setPlayerName] = useState('Gracz')
-  const [isEditing, setIsEditing] = useState(false)
-  const [stats] = useState<PlayerStats>({
-    gamesPlayed: 127,
-    wins: 68,
-    draws: 23,
-    losses: 36,
-    rating: 1456,
-    ratingHistory: [
-      { date: '2024-09-01', rating: 1200 },
-      { date: '2024-09-15', rating: 1284 },
-      { date: '2024-10-01', rating: 1398 },
-      { date: '2024-10-10', rating: 1456 }
-    ],
-    favoriteOpening: 'Obrona Sycylijska',
-    averageGameTime: 12,
-    longestWinStreak: 8,
-    currentStreak: 3,
-    tacticalRating: 1623,
-    puzzlesSolved: 234
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [avatar, setAvatar] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [stats, setStats] = useState({
+    puzzles_rating: 1600,
+    puzzles_solved: 0,
+    puzzles_solved_correct: 0,
+    personality: ''
   })
 
-  const [achievements] = useState<Achievement[]>([
-    {
-      id: '1',
-      title: 'Pierwsze kroki',
-      description: 'Rozegraj pierwszą partię',
-      icon: '👶',
-      unlocked: true,
-      unlockedDate: '2024-09-01'
-    },
-    {
-      id: '2',
-      title: 'Taktyczny mistrz',
-      description: 'Rozwiąż 100 zadań taktycznych',
-      icon: '🧩',
-      unlocked: true,
-      unlockedDate: '2024-09-25'
-    },
-    {
-      id: '3',
-      title: 'Seria zwycięstw',
-      description: 'Wygraj 5 partii z rzędu',
-      icon: '🔥',
-      unlocked: true,
-      unlockedDate: '2024-10-02'
-    },
-    {
-      id: '4',
-      title: 'Analityk',
-      description: 'Przeanalizuj 50 pozycji',
-      icon: '🔍',
-      unlocked: false
-    },
-    {
-      id: '5',
-      title: 'Maraton',
-      description: 'Rozegraj 200 partii',
-      icon: '🏃',
-      unlocked: false
-    },
-    {
-      id: '6',
-      title: 'Mistrz końcówek',
-      description: 'Wygraj 10 końcówek',
-      icon: '👑',
-      unlocked: false
-    }
-  ])
-
+  // Załaduj dane użytkownika
   useEffect(() => {
-    const savedName = localStorage.getItem('chess-player-name')
-    if (savedName) {
-      setPlayerName(savedName)
+    const loadUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          setError('Musisz być zalogowany')
+          setLoading(false)
+          return
+        }
+
+        // Pobierz dane z tabeli users
+        const { data, error: fetchError } = await supabase
+          .from('users')
+          .select('email, first_name, last_name, avatar, puzzles_rating, puzzles_solved, puzzles_solved_correct, personality')
+          .eq('id', user.id)
+          .single()
+
+        if (fetchError) {
+          setError('Błąd przy pobieraniu danych: ' + fetchError.message)
+          setLoading(false)
+          return
+        }
+
+        setEmail(data?.email || user.email || '')
+        setFirstName(data?.first_name || '')
+        setLastName(data?.last_name || '')
+        setAvatar(data?.avatar || null)
+        setStats({
+          puzzles_rating: data?.puzzles_rating || 1600,
+          puzzles_solved: data?.puzzles_solved || 0,
+          puzzles_solved_correct: data?.puzzles_solved_correct || 0,
+          personality: data?.personality || ''
+        })
+      } catch (err) {
+        setError('Błąd: ' + (err as Error).message)
+      }
+
+      setLoading(false)
     }
+
+    loadUserData()
   }, [])
 
-  const savePlayerName = () => {
-    localStorage.setItem('chess-player-name', playerName)
-    setIsEditing(false)
+  // Zapisz zmiany
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    setSuccess(false)
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setError('Musisz być zalogowany')
+        setSaving(false)
+        return
+      }
+
+      // Zaktualizuj dane w tabeli users
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          avatar: avatar,
+        })
+        .eq('id', user.id)
+
+      if (updateError) {
+        setError('Błąd przy zapisywaniu: ' + updateError.message)
+        setSaving(false)
+        return
+      }
+
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch (err) {
+      setError('Błąd: ' + (err as Error).message)
+    }
+
+    setSaving(false)
   }
 
-  const getWinRate = () => {
-    return Math.round((stats.wins / stats.gamesPlayed) * 100)
-  }
-
-  const getRatingTrend = () => {
-    const history = stats.ratingHistory
-    if (history.length < 2) return 'stable'
-    
-    const lastRating = history[history.length - 1].rating
-    const prevRating = history[history.length - 2].rating
-    
-    if (lastRating > prevRating) return 'up'
-    if (lastRating < prevRating) return 'down'
-    return 'stable'
-  }
-
-  const getRatingTrendIcon = () => {
-    const trend = getRatingTrend()
-    switch (trend) {
-      case 'up': return '📈'
-      case 'down': return '📉'
-      default: return '➡️'
+  // Wyloguj użytkownika
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        setError('Błąd przy wylogowaniu: ' + error.message)
+        return
+      }
+      navigate('/login')
+    } catch (err) {
+      setError('Błąd: ' + (err as Error).message)
     }
   }
 
-  const exportStats = () => {
-    const exportData = {
-      playerName,
-      stats,
-      achievements: achievements.filter(a => a.unlocked),
-      exportDate: new Date().toISOString()
+  // Obsługa wgrania avatara
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Konwertuj do base64
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64 = reader.result as string
+      setAvatar(base64)
     }
-    
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `chess-profile-${playerName}-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    reader.readAsDataURL(file)
+  }
+
+  if (loading) {
+    return (
+      <div className="profil-container">
+        <div className="loading">⏳ Ładowanie...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="tab-content">
-      <h2>👤 Profil gracza</h2>
-      
-      <div className="profile-container">
-        {/* Panel informacji o graczu */}
-        <div className="profile-panel">
-          <h3>🎮 Informacje o graczu</h3>
-          <div className="panel-content">
-            <div className="player-info">
-              {isEditing ? (
-                <div className="edit-name">
-                  <input 
-                    type="text" 
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && savePlayerName()}
-                  />
-                  <button onClick={savePlayerName}>✅</button>
-                  <button onClick={() => setIsEditing(false)}>❌</button>
+    <>
+      <div className="profil-container">
+        <h1 className="profil-title">👤 Mój Profil</h1>
+        <div className="profil-card">
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">✅ Zmiany zapisane!</div>}
+
+          <form onSubmit={handleSave} className="profil-form">
+            <div className="form-section">
+              <div className="avatar-section">
+                <div className="avatar-preview">
+                  {avatar ? (
+                    <img src={avatar} alt="Avatar" className="avatar-image" />
+                  ) : (
+                    <div className="avatar-placeholder">📷</div>
+                  )}
                 </div>
-              ) : (
-                <div className="player-name">
-                  <h3>{playerName}</h3>
-                  <button onClick={() => setIsEditing(true)}>✏️</button>
-                </div>
-              )}
-              
-              <div className="current-rating">
-                <span className="rating-label">Rating:</span>
-                <span className="rating-value">{stats.rating}</span>
-                <span className="rating-trend">{getRatingTrendIcon()}</span>
+                <label htmlFor="avatar-upload" className="avatar-upload-label">
+                  📸 Zmień avatar
+                </label>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="avatar-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  disabled={true}
+                  className="input-disabled"
+                />
+                <small>Email nie może być zmieniony</small>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="firstName">Imię</label>
+                <input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Wpisz swoje imię"
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="lastName">Nazwisko</label>
+                <input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Wpisz swoje nazwisko"
+                  disabled={saving}
+                />
               </div>
             </div>
-            
-            <div className="profile-actions">
-              <button onClick={exportStats} className="export-btn">
-                📊 Eksportuj statystyki
+
+            <div className="button-group">
+              <button
+                type="submit"
+                className="save-button"
+                disabled={saving}
+              >
+                {saving ? '⏳ Zapisywanie...' : '💾 Zapisz zmiany'}
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* Panel statystyk */}
-        <div className="profile-panel">
-          <h3>📊 Statystyki</h3>
-          <div className="panel-content">
-            <div className="stats-grid">
-              <div className="stat-card">
-                <h4>Partie</h4>
-                <div className="stat-main">{stats.gamesPlayed}</div>
-                <div className="stat-breakdown">
-                  <span className="wins">Wygrane: {stats.wins}</span>
-                  <span className="draws">Remisy: {stats.draws}</span>
-                  <span className="losses">Przegrane: {stats.losses}</span>
-                </div>
-              </div>
-              
-              <div className="stat-card">
-                <h4>Procent wygranych</h4>
-                <div className="stat-main">{getWinRate()}%</div>
-                <div className="win-rate-bar">
-                  <div 
-                    className="win-rate-fill" 
-                    style={{ width: `${getWinRate()}%` }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div className="stat-card">
-                <h4>Taktyka</h4>
-                <div className="stat-main">{stats.tacticalRating}</div>
-                <div className="stat-breakdown">
-                  <span>Zadań: {stats.puzzlesSolved}</span>
-                </div>
-              </div>
-              
-              <div className="stat-card">
-                <h4>Serie</h4>
-                <div className="stat-main">{stats.currentStreak}</div>
-                <div className="stat-breakdown">
-                  <span>Rekord: {stats.longestWinStreak}</span>
-                </div>
+            <div className="button-group logout-group">
+              <button
+                type="button"
+                className="logout-button"
+                onClick={handleLogout}
+              >
+                🚪 Wyloguj się
+              </button>
+            </div>
+          </form>
+
+          <div className="profile-stats">
+            <div className="stat-box">
+              <div className="stat-label">Puzzle Rating</div>
+              <div className="stat-value">{stats.puzzles_rating}</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-label">Zadań rozwiązanych</div>
+              <div className="stat-value">{stats.puzzles_solved_correct}</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-label">Skuteczność</div>
+              <div className="stat-value">
+                {stats.puzzles_solved > 0 
+                  ? Math.round((stats.puzzles_solved_correct / stats.puzzles_solved) * 100) 
+                  : 0}%
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Panel historii ratingu */}
-        <div className="profile-panel">
-          <h3>📈 Historia ratingu</h3>
-          <div className="panel-content">
-            <div className="rating-chart">
-              {stats.ratingHistory.map((point, index) => (
-                <div key={index} className="rating-point">
-                  <div className="rating-date">{point.date}</div>
-                  <div className="rating-value">{point.rating}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Panel stylu gry */}
-        <div className="profile-panel">
-          <h3>♟️ Styl gry</h3>
-          <div className="panel-content">
-            <div className="style-stats">
-              <div className="style-item">
-                <span className="style-label">Ulubione otwarcie:</span>
-                <span className="style-value">{stats.favoriteOpening}</span>
+            {stats.personality && (
+              <div className="stat-box">
+                <div className="stat-label">Osobowość szachowa</div>
+                <div className="stat-value">{stats.personality}</div>
               </div>
-              <div className="style-item">
-                <span className="style-label">Średni czas partii:</span>
-                <span className="style-value">{stats.averageGameTime} min</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Panel osiągnięć */}
-        <div className="profile-panel">
-          <h3>🏆 Osiągnięcia ({achievements.filter(a => a.unlocked).length}/{achievements.length})</h3>
-          <div className="panel-content">
-            <div className="achievements-grid">
-              {achievements.map(achievement => (
-                <div 
-                  key={achievement.id}
-                  className={`achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}`}
-                >
-                  <div className="achievement-icon">{achievement.icon}</div>
-                  <div className="achievement-info">
-                    <h4>{achievement.title}</h4>
-                    <p>{achievement.description}</p>
-                    {achievement.unlocked && achievement.unlockedDate && (
-                      <small>Odblokowane: {achievement.unlockedDate}</small>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
+
+      <style>{`
+        .profil-container {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .profil-card {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          padding: 30px;
+          display: flex;
+          gap: 30px;
+          margin: 0 20px 40px 20px;
+          max-width: 1200px;
+        }
+
+        .profil-title {
+          color: #333;
+          text-align: center;
+          font-size: 28px;
+          margin: 40px 20px 20px 20px;
+        }
+
+        .profile-stats {
+          flex: 0 0 280px;
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          padding-top: 50px;
+        }
+
+        .stat-box {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 20px;
+          border-radius: 8px;
+          text-align: center;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .profil-form {
+          display: flex;
+          flex-direction: column;
+          gap: 30px;
+          flex: 1;
+        }
+
+        .form-section {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .avatar-section {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 15px;
+          padding: 20px;
+          background-color: #f9f9f9;
+          border-radius: 8px;
+        }
+
+        .avatar-preview {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          overflow: hidden;
+          border: 3px solid #667eea;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #e8eaf6;
+        }
+
+        .avatar-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .avatar-placeholder {
+          font-size: 48px;
+        }
+
+        .avatar-upload-label {
+          padding: 10px 20px;
+          background-color: #667eea;
+          color: white;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: background-color 0.3s;
+        }
+
+        .avatar-upload-label:hover {
+          background-color: #764ba2;
+        }
+
+        .avatar-input {
+          display: none;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .form-group label {
+          font-weight: 600;
+          color: #333;
+          font-size: 14px;
+        }
+
+        .form-group input {
+          padding: 12px;
+          border: 2px solid #e0e0e0;
+          border-radius: 6px;
+          font-size: 14px;
+          font-family: inherit;
+          transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+          outline: none;
+          border-color: #667eea;
+        }
+
+        .form-group input:disabled {
+          background-color: #f5f5f5;
+          cursor: not-allowed;
+          color: #999;
+        }
+
+        .input-disabled {
+          background-color: #f5f5f5 !important;
+          color: #666 !important;
+        }
+
+        .form-group small {
+          color: #999;
+          font-size: 12px;
+        }
+
+        .button-group {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          margin-top: 10px;
+        }
+
+        .edit-button,
+        .save-button,
+        .cancel-button {
+          padding: 12px 24px;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          flex: 1;
+        }
+
+        .save-button {
+          background-color: #4caf50;
+          color: white;
+        }
+
+        .save-button:hover:not(:disabled) {
+          background-color: #45a049;
+          transform: translateY(-2px);
+        }
+
+        .save-button:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .logout-group {
+          margin-top: 30px;
+          border-top: 2px solid #e0e0e0;
+          padding-top: 20px;
+        }
+
+        .logout-button {
+          padding: 12px 24px;
+          background-color: #f44336;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          width: 100%;
+        }
+
+        .logout-button:hover {
+          background-color: #da190b;
+          transform: translateY(-2px);
+        }
+
+        .stat-label {
+          font-size: 11px;
+          font-weight: 600;
+          opacity: 0.9;
+          margin-bottom: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+          font-size: 24px;
+          font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+          .profil-card {
+            flex-direction: column;
+          }
+
+          .profile-stats {
+            flex: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            width: 100%;
+            padding-top: 0;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+          }
+        }
+
+        .error-message {
+          background-color: #ffebee;
+          color: #c62828;
+          padding: 12px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+          font-size: 14px;
+          text-align: center;
+        }
+
+        .success-message {
+          background-color: #e8f5e9;
+          color: #2e7d32;
+          padding: 12px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+          font-size: 14px;
+          text-align: center;
+        }
+
+        .loading {
+          text-align: center;
+          padding: 40px;
+          font-size: 16px;
+          color: #666;
+        }
+      `}</style>
+    </>
   )
 }

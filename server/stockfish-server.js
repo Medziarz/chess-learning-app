@@ -154,7 +154,7 @@ class StockfishEngine {
     return parts[1]; // 'w' dla białych, 'b' dla czarnych
   }
 
-  async analyzePosition(fen, depth = 20, timeLimit = 2000) {
+  async analyzePosition(fen, depth = 20, timeLimit = 2000, elo = null) {
     // Sprawdź cache
     if (this.cache.has(fen, depth)) {
       console.log('🎯 Cache hit:', fen);
@@ -181,6 +181,12 @@ class StockfishEngine {
         
         resolve(analysis);
       });
+
+      // Set UCI Elo level if provided
+      if (elo) {
+        this.sendCommand(`setoption name UCI_Elo value ${elo}`);
+        console.log(`⚙️ Setting UCI_Elo to ${elo}`);
+      }
 
       // Set position and analyze
       this.sendCommand(`position fen ${fen}`);
@@ -216,21 +222,22 @@ app.get('/health', (req, res) => {
 
 app.post('/analyze', async (req, res) => {
   try {
-    const { fen, depth = 20, timeLimit = 2000 } = req.body
+    const { fen, depth = 20, timeLimit = 2000, elo = null } = req.body
     
     if (!fen) {
       return res.status(400).json({ error: 'FEN position required' })
     }
     
-    console.log(`🔍 Analyzing: ${fen} (depth: ${depth})`)
+    console.log(`🔍 Analyzing: ${fen} (depth: ${depth}${elo ? `, elo: ${elo}` : ''})`)
     
-    const analysis = await stockfish.analyzePosition(fen, depth, timeLimit)
+    const analysis = await stockfish.analyzePosition(fen, depth, timeLimit, elo)
     
     res.json({
       fen: fen,
       evaluation: analysis.evaluation || 0.0,
       bestMove: analysis.bestMove || 'e2e4',
       depth: analysis.depth || depth,
+      elo: elo || null,
       engine: 'stockfish-local',
       timestamp: new Date().toISOString()
     })
@@ -255,14 +262,15 @@ app.post('/analyze-batch', async (req, res) => {
     
     const results = []
     
-    for (const { fen, depth = 15 } of positions) {
+    for (const { fen, depth = 15, elo = null } of positions) {
       try {
-        const analysis = await stockfish.analyzePosition(fen, depth, 1000)
+        const analysis = await stockfish.analyzePosition(fen, depth, 1000, elo)
         results.push({
           fen,
           evaluation: analysis.evaluation,
           bestMove: analysis.bestMove,
-          depth: analysis.depth
+          depth: analysis.depth,
+          elo: elo || null
         })
       } catch (error) {
         results.push({
